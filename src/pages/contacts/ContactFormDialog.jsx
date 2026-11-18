@@ -10,20 +10,32 @@ const EMPTY_FORM = { name: '', phone: '', email: '', address: '', note: '' }
 
 const LABELS = {
   [CONTACT_KINDS.PELANGGAN]: {
-    title: 'pelanggan',
+    label: 'Pelanggan',
     namePlaceholder: 'Contoh: Bu Sari',
     notePlaceholder: 'Contoh: pelanggan tetap, langganan mingguan',
   },
   [CONTACT_KINDS.PEMASOK]: {
-    title: 'pemasok',
+    label: 'Pemasok',
     namePlaceholder: 'Contoh: Toko Beras Makmur',
     notePlaceholder: 'Contoh: pemasok beras dan minyak, antar tiap Senin',
   },
 }
 
+function toForm(contact) {
+  if (!contact) return EMPTY_FORM
+  return {
+    name: contact.name ?? '',
+    phone: contact.phone ?? '',
+    email: contact.email ?? '',
+    address: contact.address ?? '',
+    note: contact.note ?? '',
+  }
+}
+
 export default function ContactFormDialog({ kind = CONTACT_KINDS.PELANGGAN, open, contact = null, onClose, onSaved }) {
   const toast = useToast()
   const labels = LABELS[kind] ?? LABELS[CONTACT_KINDS.PELANGGAN]
+  const noun = labels.label.toLowerCase()
   const isEdit = Boolean(contact)
 
   const [form, setForm] = useState(EMPTY_FORM)
@@ -32,17 +44,7 @@ export default function ContactFormDialog({ kind = CONTACT_KINDS.PELANGGAN, open
 
   useEffect(() => {
     if (!open) return
-    setForm(
-      contact
-        ? {
-            name: contact.name ?? '',
-            phone: contact.phone ?? '',
-            email: contact.email ?? '',
-            address: contact.address ?? '',
-            note: contact.note ?? '',
-          }
-        : EMPTY_FORM,
-    )
+    setForm(toForm(contact))
     setErrors({})
   }, [open, contact])
 
@@ -73,7 +75,7 @@ export default function ContactFormDialog({ kind = CONTACT_KINDS.PELANGGAN, open
     const parsed = contactSchema.safeParse(form)
     if (!parsed.success) {
       setErrors(toFieldErrors(parsed.error))
-      toast.push(`Periksa kembali data ${labels.title} yang ditandai merah.`, { tone: 'error' })
+      toast.push(`Periksa kembali data ${noun} yang ditandai merah.`, { tone: 'error' })
       return
     }
 
@@ -85,19 +87,17 @@ export default function ContactFormDialog({ kind = CONTACT_KINDS.PELANGGAN, open
 
       toast.push(
         isEdit
-          ? `Data ${labels.title} ${saved.name} diperbarui.`
-          : `${labels.title === 'pelanggan' ? 'Pelanggan' : 'Pemasok'} ${saved.name} ditambahkan.`,
+          ? `Data ${noun} ${saved.name} diperbarui.`
+          : `${labels.label} ${saved.name} ditambahkan.`,
       )
       onSaved?.(saved)
       onClose?.()
     } catch (error) {
-      toast.push(error?.message ?? `Data ${labels.title} gagal disimpan.`, { tone: 'error' })
+      toast.push(error?.message ?? `Data ${noun} gagal disimpan.`, { tone: 'error' })
     } finally {
       setSaving(false)
     }
   }
-
-  const Label = labels.title === 'pelanggan' ? 'Pelanggan' : 'Pemasok'
 
   return (
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
@@ -105,13 +105,13 @@ export default function ContactFormDialog({ kind = CONTACT_KINDS.PELANGGAN, open
         className="modal"
         role="dialog"
         aria-modal="true"
-        aria-label={isEdit ? `Ubah ${labels.title}` : `Tambah ${labels.title}`}
+        aria-label={isEdit ? `Ubah ${noun}` : `Tambah ${noun}`}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="modal__header">
           <div>
             <h3>
-              {isEdit ? 'Ubah' : 'Tambah'} {labels.title}
+              {isEdit ? 'Ubah' : 'Tambah'} {noun}
             </h3>
             <p className="muted">Hanya data kontak. Tidak ada piutang atau utang yang dicatat di sini.</p>
           </div>
@@ -122,7 +122,7 @@ export default function ContactFormDialog({ kind = CONTACT_KINDS.PELANGGAN, open
 
         <form className="modal__content" onSubmit={handleSubmit} noValidate>
           <div className="form-grid">
-            <Field label={`Nama ${labels.title}`} htmlFor="contactName" required error={errors.name} className="form-grid__full">
+            <Field label={`Nama ${noun}`} htmlFor="contactName" required error={errors.name} className="form-grid__full">
               <input
                 id="contactName"
                 className={`input ${errors.name ? 'input--error' : ''}`.trim()}
@@ -183,12 +183,12 @@ export default function ContactFormDialog({ kind = CONTACT_KINDS.PELANGGAN, open
 
           <div className="form-actions">
             <Button type="submit" icon={Save} loading={saving}>
-              {isEdit ? `Simpan perubahan` : `Simpan ${labels.title}`}
+              {isEdit ? 'Simpan perubahan' : `Simpan ${noun}`}
             </Button>
             <Button variant="secondary" onClick={onClose}>
               Batal
             </Button>
-            <span className="form-note">Nama {Label.toLowerCase()} tidak boleh sama dengan data yang sudah ada.</span>
+            <span className="form-note">Nama {noun} tidak boleh sama dengan data yang sudah ada.</span>
           </div>
         </form>
       </div>

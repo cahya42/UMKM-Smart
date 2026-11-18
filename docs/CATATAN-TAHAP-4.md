@@ -182,6 +182,17 @@ Bug yang ditemukan dan diperbaiki saat pengujian ulang:
    field teks lama dihapus dari state, payload, dan skema validasi; nama pemasok tetap disalin ke
    pergerakan stok sebagai arsip.
 
+Penyederhanaan setelah tinjauan ulang:
+
+- Pemeriksaan pemakaian kontak disatukan lewat konfigurasi (`usageTable`, `usageField`,
+  `usageLabel`), sehingga hapus pelanggan dan pemasok memakai satu jalur kode dan hanya membuka
+  tabel yang benar-benar diperiksa.
+- Pemeriksaan nama ganda dipakai bersama oleh tambah dan ubah kontak.
+- Parameter `status` pada `listContacts` dan fungsi `getContact` yang tidak dipakai dihapus;
+  penyaringan status dilakukan di halaman.
+- Halaman kontak memakai satu state dialog (`undefined` tertutup, `null` baru, objek = ubah) dan
+  konfigurasi tanpa label ganda; dialog kontak memakai satu label untuk semua teks.
+
 ## Batasan yang disadari
 
 1. **Belum ada penjualan kredit/piutang**; semua nota dianggap dibayar penuh ke akun kas.

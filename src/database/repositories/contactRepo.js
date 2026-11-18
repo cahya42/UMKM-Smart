@@ -21,13 +21,19 @@ export const CONTACT_KINDS = {
 const CONTACT_CONFIG = {
   pelanggan: {
     table: 'customers',
-    label: 'Pelanggan',
     entity: 'customer',
+    label: 'Pelanggan',
+    usageTable: 'sales',
+    usageField: 'customerId',
+    usageLabel: 'nota',
   },
   pemasok: {
     table: 'suppliers',
-    label: 'Pemasok',
     entity: 'supplier',
+    label: 'Pemasok',
+    usageTable: 'stock_movements',
+    usageField: 'supplierId',
+    usageLabel: 'pergerakan stok',
   },
 }
 
@@ -47,56 +53,49 @@ function normalize(input) {
   }
 }
 
-/** Daftar kontak satu jenis, urut nama. `status`: aktif | nonaktif | semua. */
-export async function listContacts(kind, { status = 'semua' } = {}) {
-  const { table } = getConfig(kind)
-  const rows = await db.table(table).toArray()
-
-  return rows
-    .filter((row) => {
-      if (status === 'aktif') return row.isActive !== false
-      if (status === 'nonaktif') return row.isActive === false
-      return true
-    })
-    .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '', 'id'))
+async function ensureNameAvailable(tx, config, name, excludeId = null) {
+  const rows = await tx.table(config.table).toArray()
+  const target = name.toLowerCase()
+  const duplicate = rows.some(
+    (row) => row.id !== excludeId && (row.name ?? '').trim().toLowerCase() === target,
+  )
+  if (duplicate) throw new Error(`${config.label} dengan nama "${name}" sudah ada.`)
 }
 
-export async function getContact(kind, id) {
+/** Daftar kontak satu jenis, urut nama. */
+export async function listContacts(kind) {
   const { table } = getConfig(kind)
-  if (!id) return null
-  return db.table(table).get(id)
+  const rows = await db.table(table).toArray()
+  return rows.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '', 'id'))
 }
 
 /**
- * Jumlah pemakaian kontak: pelanggan dihitung dari nota penjualan (yang tidak
- * dibatalkan untuk nilai omzet), pemasok dari pergerakan stok barang masuk.
+ * Rekap pemakaian kontak: pelanggan dari nota penjualan, pemasok dari
+ * pergerakan stok. Nilai pemakaian pelanggan hanya menghitung nota yang tidak
+ * dibatalkan; nilai pemasok hanya menghitung barang masuk.
  * Mengembalikan Map<contactId, { count, total }>.
  */
 export async function getContactUsage(kind) {
+  const config = getConfig(kind)
+  const rows = await db.table(config.usageTable).toArray()
   const usage = new Map()
 
-  if (kind === CONTACT_KINDS.PELANGGAN) {
-    const sales = await db.sales.toArray()
-    for (const sale of sales) {
-      if (!sale.customerId) continue
-      const current = usage.get(sale.customerId) ?? { count: 0, total: 0 }
-      current.count += 1
-      if (sale.status !== 'dibatalkan') current.total += Number(sale.total ?? 0)
-      usage.set(sale.customerId, current)
+  for (const row of rows) {
+    const contactId = row[config.usageField]
+    if (!contactId) continue
+
+    const current = usage.get(contactId) ?? { count: 0, total: 0 }
+    current.count += 1
+
+    if (kind === CONTACT_KINDS.PELANGGAN) {
+      if (row.status !== 'dibatalkan') current.total += Number(row.total ?? 0)
+    } else if (row.type === 'masuk') {
+      current.total += Math.round(Number(row.qty ?? 0) * Number(row.unitCost ?? 0))
     }
-    return usage
+
+    usage.set(contactId, current)
   }
 
-  const movements = await db.stock_movements.toArray()
-  for (const movement of movements) {
-    if (!movement.supplierId) continue
-    const current = usage.get(movement.supplierId) ?? { count: 0, total: 0 }
-    current.count += 1
-    if (movement.type === 'masuk') {
-      current.total += Math.round(Number(movement.qty ?? 0) * Number(movement.unitCost ?? 0))
-    }
-    usage.set(movement.supplierId, current)
-  }
   return usage
 }
 
@@ -105,11 +104,7 @@ export async function createContact(kind, input) {
   const data = normalize(input)
 
   return db.transaction('rw', db.table(config.table), db.audit_logs, async (tx) => {
-    const rows = await tx.table(config.table).toArray()
-    const target = data.name.toLowerCase()
-    if (rows.some((row) => (row.name ?? '').trim().toLowerCase() === target)) {
-      throw new Error(`${config.label} dengan nama "${data.name}" sudah ada.`)
-    }
+    await ensureNameAvailable(tx, config, data.name)
 
     const now = new Date().toISOString()
     const contact = {
@@ -127,7 +122,6 @@ export async function createContact(kind, input) {
         entity: config.entity,
         entityId: contact.id,
         description: `Menambahkan ${config.label.toLowerCase()} ${contact.name}`,
-        metadata: { name: contact.name, phone: contact.phone },
       },
       tx,
     )
@@ -144,18 +138,9 @@ export async function updateContact(kind, id, input) {
     const current = await tx.table(config.table).get(id)
     if (!current) throw new Error(`${config.label} tidak ditemukan.`)
 
-    const rows = await tx.table(config.table).toArray()
-    const target = data.name.toLowerCase()
-    if (rows.some((row) => row.id !== id && (row.name ?? '').trim().toLowerCase() === target)) {
-      throw new Error(`${config.label} dengan nama "${data.name}" sudah ada.`)
-    }
+    await ensureNameAvailable(tx, config, data.name, id)
 
-    const updated = {
-      ...current,
-      ...data,
-      updatedAt: new Date().toISOString(),
-    }
-
+    const updated = { ...current, ...data, updatedAt: new Date().toISOString() }
     await tx.table(config.table).put(updated)
     await addAuditLog(
       {
@@ -198,46 +183,36 @@ export async function setContactActive(kind, id, isActive) {
 export async function deleteContact(kind, id) {
   const config = getConfig(kind)
 
-  // Tabel transaksi ikut dibuka di dalam transaksi karena pemakaian kontak
-  // diperiksa dari `sales` (pelanggan) dan `stock_movements` (pemasok).
   return db.transaction(
     'rw',
     db.table(config.table),
-    db.sales,
-    db.stock_movements,
+    db.table(config.usageTable),
     db.audit_logs,
     async (tx) => {
       const current = await tx.table(config.table).get(id)
       if (!current) throw new Error(`${config.label} tidak ditemukan.`)
 
-      if (kind === CONTACT_KINDS.PELANGGAN) {
-      const used = await tx.table('sales').filter((sale) => sale.customerId === id).count()
-      if (used > 0) {
-        throw new Error(
-          `${config.label} ${current.name} sudah dipakai pada ${used} nota. Nonaktifkan saja agar riwayat tetap utuh.`,
-        )
-      }
-    } else {
       const used = await tx
-        .table('stock_movements')
-        .filter((movement) => movement.supplierId === id)
+        .table(config.usageTable)
+        .filter((row) => row[config.usageField] === id)
         .count()
+
       if (used > 0) {
         throw new Error(
-          `${config.label} ${current.name} sudah dipakai pada ${used} pergerakan stok. Nonaktifkan saja agar riwayat tetap utuh.`,
+          `${config.label} ${current.name} sudah dipakai pada ${used} ${config.usageLabel}. Nonaktifkan saja agar riwayat tetap utuh.`,
         )
       }
-    }
 
-    await tx.table(config.table).delete(id)
-    await addAuditLog(
-      {
-        action: 'delete',
-        entity: config.entity,
-        entityId: id,
-        description: `Menghapus ${config.label.toLowerCase()} ${current.name}`,
-      },
-      tx,
-    )
-  })
+      await tx.table(config.table).delete(id)
+      await addAuditLog(
+        {
+          action: 'delete',
+          entity: config.entity,
+          entityId: id,
+          description: `Menghapus ${config.label.toLowerCase()} ${current.name}`,
+        },
+        tx,
+      )
+    },
+  )
 }
