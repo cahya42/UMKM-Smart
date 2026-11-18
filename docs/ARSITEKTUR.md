@@ -4,7 +4,7 @@ Dokumen ini adalah rancangan yang diminta pada bagian N master prompt: ringkasan
 diagram alur modul, struktur folder, rancangan database, navigasi, hubungan dengan layanan
 lisensi dan AI, kebutuhan teknis, serta rencana implementasi bertahap.
 
-Status saat ini: **Tahap 1 sampai Tahap 6 sudah diimplementasikan**, termasuk backup/restore tervalidasi, pemeriksaan konsistensi data, kas, laporan, dan SMART ADVISOR dengan persetujuan sebelum data dikirim. Modul yang belum aktif: PWA dan finalisasi lisensi menyusul pada Tahap 7-8. Menu yang belum aktif ditandai jelas di aplikasi.
+Status saat ini: **Tahap 1 sampai Tahap 7 sudah diimplementasikan**, termasuk backup/restore tervalidasi, pemeriksaan konsistensi data, kas, laporan, SMART ADVISOR dengan persetujuan sebelum data dikirim, serta PWA (manifest, service worker, indikator offline, pemberitahuan pembaruan). Backup terjadwal dan finalisasi lisensi menyusul pada Tahap 8. Menu yang belum aktif ditandai jelas di aplikasi.
 
 ---
 
@@ -116,7 +116,8 @@ umkm-smart/
     ├── App.jsx                    # rute + gerbang lisensi
     ├── assets/
     ├── components/
-    │   └── ui/                    # Button, Card, Field, Badge, Modal, Toast, EmptyState
+    │   ├── ui/                    # Button, Card, Field, Badge, Modal, Toast, EmptyState
+    │   └── pwa/                   # PwaStatus: indikator offline & pembaruan aplikasi
     ├── layouts/
     │   ├── AppLayout.jsx           # sidebar + topbar + outlet
     │   ├── Sidebar.jsx
@@ -393,7 +394,7 @@ Aturan:
 | Ikon & grafik | lucide-react, recharts |
 | Validasi | zod |
 | Ekspor (Tahap 5) | `xlsx` untuk Excel, `jspdf` + `jspdf-autotable` untuk PDF (dimuat dinamis) |
-| PWA (Tahap 7) | `vite-plugin-pwa`, service worker, manifest, prompt pembaruan |
+| PWA (Tahap 7) | `vite-plugin-pwa` + Workbox: manifest, precache aset, ikon 192/512/maskable, indikator offline, prompt pembaruan (aktif pada hasil build) |
 | Backup (Tahap 5) | ekspor JSON berversi + checksum SHA-256, validasi, cadangan lokal, konfirmasi timpa data, pemeriksaan konsistensi |
 | Lisensi | HTTPS endpoint `/activate` dan `/verify`, kunci ECDSA P-256 |
 | AI (Tahap 6) | Backend proxy HTTPS + API key penyedia di server |
@@ -406,6 +407,9 @@ Keterbatasan teknis yang harus diketahui pengguna:
 - Berkas backup tidak dienkripsi; berisi data usaha dan harus disimpan di tempat aman.
 - Menghapus data browser menghapus data usaha.
 - Data lokal belum dienkripsi; jangan menyatakan sebaliknya.
+- Service worker hanya menyimpan aset aplikasi (bukan data usaha) dan hanya dipasang pada hasil
+  build; `npm run dev` tidak memasang service worker.
+- Pemasangan sebagai aplikasi memerlukan HTTPS atau localhost.
 - Aktivasi dan AI memerlukan internet; pencatatan tidak.
 
 ---
@@ -420,7 +424,7 @@ Keterbatasan teknis yang harus diketahui pengguna:
 | 4 | Transaksi: penjualan + pembatalan aman, pengeluaran, integrasi stok dan kas, pelanggan/pemasok | **Selesai** |
 | 5 | Keuangan & laporan: akun kas, transfer, dashboard lengkap, 9 laporan, ekspor Excel/PDF; backup/restore + pemeriksaan konsistensi | **Selesai** |
 | 6 | SMART ADVISOR: chat, ringkasan kontekstual, adapter AI, proxy, simulasi, riwayat, privasi | **Selesai (proxy disiapkan penerbit)** |
-| 7 | Backup & PWA: ekspor/impor tervalidasi, pemulihan, manifest, offline, pembaruan | Sebagian (backup/restore & pemeriksaan selesai; PWA dan backup terjadwal belum) |
+| 7 | Backup & PWA: ekspor/impor tervalidasi, pemulihan, manifest, offline, pembaruan | Sebagian (backup/restore, pemeriksaan, dan PWA selesai; backup terjadwal belum) |
 | 8 | Lisensi & finalisasi: server aktivasi, pengelolaan perangkat, toleransi offline, pengujian menyeluruh, dokumentasi | Sebagian (sisi klien sudah ada) |
 
 Ketergantungan: Tahap 3 membutuhkan produk (Tahap 2); Tahap 4 membutuhkan produk, stok,

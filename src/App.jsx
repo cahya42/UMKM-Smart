@@ -17,6 +17,7 @@ import AdvisorPage from './pages/advisor/AdvisorPage'
 import ActivationPage from './pages/activation/ActivationPage'
 import { LicenseProvider, useLicense } from './services/license/LicenseContext'
 import LoadingScreen from './components/ui/LoadingScreen'
+import PwaStatus from './components/pwa/PwaStatus'
 
 /** Menahan akses ke modul usaha sampai lisensi aktif atau mode pengembangan dibuka. */
 function RequireLicense() {
@@ -31,6 +32,7 @@ function RequireLicense() {
 export default function App() {
   return (
     <LicenseProvider>
+      <PwaStatus />
       <Routes>
         <Route path="/aktivasi" element={<ActivationPage />} />
 
