@@ -52,7 +52,7 @@ export const NAV_GROUPS = [
     label: 'Analisis',
     items: [
       { to: '/laporan', label: 'Laporan Usaha', icon: BarChart3 },
-      { to: '/advisor', label: 'SMART ADVISOR', icon: Sparkles, stage: 6 },
+      { to: '/advisor', label: 'SMART ADVISOR', icon: Sparkles },
     ],
   },
   {

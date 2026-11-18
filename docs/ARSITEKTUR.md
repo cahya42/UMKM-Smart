@@ -4,7 +4,7 @@ Dokumen ini adalah rancangan yang diminta pada bagian N master prompt: ringkasan
 diagram alur modul, struktur folder, rancangan database, navigasi, hubungan dengan layanan
 lisensi dan AI, kebutuhan teknis, serta rencana implementasi bertahap.
 
-Status saat ini: **Tahap 1 sampai Tahap 5 sudah diimplementasikan**, termasuk backup/restore tervalidasi dan pemeriksaan konsistensi data. Modul yang belum aktif: pelanggan/pemasok (Tahap 4) dan SMART ADVISOR (Tahap 6); PWA dan finalisasi lisensi menyusul pada Tahap 7-8. Menu yang belum aktif ditandai jelas di aplikasi.
+Status saat ini: **Tahap 1 sampai Tahap 6 sudah diimplementasikan**, termasuk backup/restore tervalidasi, pemeriksaan konsistensi data, kas, laporan, dan SMART ADVISOR dengan persetujuan sebelum data dikirim. Modul yang belum aktif: pelanggan/pemasok (Tahap 4); PWA dan finalisasi lisensi menyusul pada Tahap 7-8. Menu yang belum aktif ditandai jelas di aplikasi.
 
 ---
 
@@ -136,8 +136,8 @@ umkm-smart/
     │   ├── suppliers/             # (Tahap 4)
     │   ├── reports/               # (Tahap 5)
     │   ├── backup/                # Backup & Data (Tahap 5, bagian Tahap 7 dipercepat)
-    │   ├── advisor/               # (Tahap 6) AdvisorPage, AdvisorChat, AdvisorHistory,
-    │   │                          #           DecisionSimulator
+    │   ├── advisor/               # (Tahap 6) AdvisorPage, AdvisorChat,
+    │   │                          #           AdvisorConsentDialog, DecisionSimulator
     │   └── ComingSoonPage.jsx
     ├── database/
     │   ├── db.js                  # instance Dexie + versi + populate
@@ -147,7 +147,8 @@ umkm-smart/
     ├── services/
     │   ├── license/               # constants, device, storage, service, context
     │   ├── backup/                # backupService (ekspor/impor/checksum), consistency
-    │   └── ai/                    # (Tahap 6) aiService, aiProvider, aiContextService, aiPrompt
+    │   └── ai/                    # (Tahap 6) advisorContext, aiProvider, prompt,
+    │                              #           localAdvisor, advisorRepo
     ├── hooks/                     # useDashboardData, (tahap berikutnya)
     ├── utils/                     # money, dates, finance, validation
     └── styles/                    # theme.css (token), global.css (komponen)
@@ -264,7 +265,7 @@ Menu utama (sidebar pada layar besar, drawer pada layar kecil):
 | Relasi | Pelanggan | `/pelanggan` | Tahap 4 |
 | Relasi | Pemasok | `/pemasok` | Tahap 4 |
 | Analisis | Laporan Usaha | `/laporan` | Tahap 5 - aktif |
-| Analisis | SMART ADVISOR | `/advisor` | Tahap 6 |
+| Analisis | SMART ADVISOR | `/advisor` | Tahap 6 - aktif |
 | Sistem | Pengaturan | `/pengaturan` | Tahap 1 - aktif |
 | Sistem | Backup & Data | `/backup` | Tahap 5 - aktif |
 | - | Aktivasi lisensi | `/aktivasi` | Tahap 1 - aktif |
@@ -274,7 +275,7 @@ Halaman tambahan yang direncanakan:
 - `/penjualan/baru` sudah ada; `/penjualan/:id` dan cetak bukti belum
 - `/pengeluaran/baru` dan `/kas/transfer` berupa tab/dialog di halaman terkait
 - `/laporan/:jenis` masih berupa pemilih laporan di satu halaman
-- `/advisor/simulasi` (simulasi keputusan)
+- Simulasi keputusan berupa tab di `/advisor`, bukan rute terpisah
 
 Dashboard (Tahap 1) menampilkan: penjualan hari ini, penjualan bulan ini, omzet/HPP/laba
 kotor/laba bersih sesuai periode, pengeluaran, saldo kas, produk aktif, stok menipis,
@@ -361,9 +362,18 @@ Aturan:
 - Tidak mengirim password, token lisensi, API key, data pelanggan yang tidak perlu, atau
   seluruh isi database.
 - Angka dihitung aplikasi; AI menjelaskan dan memberi rekomendasi.
-- Adapter penyedia: `services/ai/aiProvider.js` dengan implementasi Gemini, OpenAI, dan
-  penyedia kompatibel; `aiService.js` memilih adapter dari pengaturan.
-- API key disimpan di backend proxy (bukan frontend). BYOK tetap melalui proxy.
+- Adapter penyedia: `services/ai/aiProvider.js` (OpenAI, Gemini, dan penyedia kompatibel). Semua
+  permintaan menuju satu proxy; `aiProvider.js` mengirim `{provider, model, messages}` ke
+  `POST {proxyUrl}/advisor` dan menerima `{answer, model?, usage?}`.
+- API key disimpan di backend proxy (bukan frontend). BYOK tetap melalui proxy. Alamat proxy diambil
+  dari `VITE_AI_PROXY_URL` atau diisi di panel Koneksi AI (tersimpan di `settings`).
+- Persetujuan: sebelum setiap kiriman, `AdvisorConsentDialog` menampilkan pertanyaan, daftar bagian
+  ringkasan, data yang tidak disertakan, dan pratinjau teks lengkap; tombol kirim baru aktif setelah
+  kotak persetujuan dicentang. Ringkasan berukuran sekitar 1.000 karakter.
+- Tanpa proxy, advisor membuat **analisis lokal** deterministik yang diberi label jelas "Analisis
+  lokal - tanpa AI"; tidak ada permintaan jaringan.
+- Riwayat percakapan disimpan lokal di `advisor_conversations` dan `advisor_messages`; setiap kiriman
+  menulis audit log tanpa isi pertanyaan/jawaban.
 - Struktur jawaban: Kondisi usaha, Temuan, Analisis, Rekomendasi (maks. 3 prioritas),
   Langkah tindakan, Catatan. AI membedakan fakta, dugaan, rekomendasi; tidak mengarang
   angka dan tidak menjanjikan hasil.
@@ -408,8 +418,8 @@ Keterbatasan teknis yang harus diketahui pengguna:
 | 3 | Kalkulator HPP: komponen biaya per jenis usaha, HPP per unit, riwayat, simulasi harga/margin | **Selesai** |
 | 4 | Transaksi: penjualan + pembatalan aman, pengeluaran, integrasi stok dan kas, pelanggan/pemasok | **Selesai (kecuali pelanggan/pemasok)** |
 | 5 | Keuangan & laporan: akun kas, transfer, dashboard lengkap, 9 laporan, ekspor Excel/PDF; backup/restore + pemeriksaan konsistensi | **Selesai** |
-| 6 | SMART ADVISOR: chat, ringkasan kontekstual, adapter AI, proxy, simulasi, riwayat, privasi | Belum |
-| 7 | Backup & PWA: ekspor/impor tervalidasi, pemulihan, manifest, offline, pembaruan | Sebagian (backup/restore & pemeriksaan selesai; PWA belum) |
+| 6 | SMART ADVISOR: chat, ringkasan kontekstual, adapter AI, proxy, simulasi, riwayat, privasi | **Selesai (proxy disiapkan penerbit)** |
+| 7 | Backup & PWA: ekspor/impor tervalidasi, pemulihan, manifest, offline, pembaruan | Sebagian (backup/restore & pemeriksaan selesai; PWA dan backup terjadwal belum) |
 | 8 | Lisensi & finalisasi: server aktivasi, pengelolaan perangkat, toleransi offline, pengujian menyeluruh, dokumentasi | Sebagian (sisi klien sudah ada) |
 
 Ketergantungan: Tahap 3 membutuhkan produk (Tahap 2); Tahap 4 membutuhkan produk, stok,

@@ -207,6 +207,32 @@ export const stockMovementSchema = z.object({
   reason: z.string().trim().max(80, 'Alasan maksimal 80 karakter').optional().default(''),
 })
 
+export const advisorQuestionSchema = z.object({
+  question: z
+    .string({ required_error: 'Tulis pertanyaan Anda' })
+    .trim()
+    .min(5, 'Pertanyaan minimal 5 karakter')
+    .max(500, 'Pertanyaan maksimal 500 karakter'),
+})
+
+const LOOPBACK_PROXY_PATTERN = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/.*)?$/i
+
+export const advisorSettingsSchema = z.object({
+  provider: z.enum(['openai', 'gemini', 'compatible'], {
+    errorMap: () => ({ message: 'Pilih penyedia AI' }),
+  }),
+  model: z.string().trim().min(1, 'Model wajib diisi').max(80, 'Nama model maksimal 80 karakter'),
+  proxyUrl: z
+    .string()
+    .trim()
+    .max(300, 'Alamat proxy maksimal 300 karakter')
+    .optional()
+    .default('')
+    .refine((value) => value === '' || /^https:\/\/\S+$/i.test(value) || LOOPBACK_PROXY_PATTERN.test(value), {
+      message: 'Gunakan alamat HTTPS, atau http://localhost untuk pengujian lokal',
+    }),
+})
+
 export const licenseActivationSchema = z.object({
   email: z.string().trim().min(1, 'Email pembeli wajib diisi').email('Format email tidak valid'),
   token: z

@@ -12,6 +12,7 @@ import CashPage from './pages/cash/CashPage'
 import ReportsPage from './pages/reports/ReportsPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import BackupPage from './pages/backup/BackupPage'
+import AdvisorPage from './pages/advisor/AdvisorPage'
 import ActivationPage from './pages/activation/ActivationPage'
 import ComingSoonPage from './pages/ComingSoonPage'
 import { LicenseProvider, useLicense } from './services/license/LicenseContext'
@@ -70,16 +71,7 @@ export default function App() {
                 />
               }
             />
-            <Route
-              path="advisor"
-              element={
-                <ComingSoonPage
-                  title="SMART ADVISOR"
-                  stage={6}
-                  description="Asisten konsultasi usaha berbasis AI yang menganalisis ringkasan data usaha Anda dan menyusun prioritas tindakan."
-                />
-              }
-            />
+            <Route path="advisor" element={<AdvisorPage />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
