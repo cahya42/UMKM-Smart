@@ -6,6 +6,8 @@ import { ToastProvider } from './components/ui/Toast'
 import './styles/theme.css'
 import './styles/global.css'
 import './styles/modules.css'
+// Ditangkap sedini mungkin agar event beforeinstallprompt tidak terlewat.
+import './services/pwa/installPrompt'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

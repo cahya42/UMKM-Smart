@@ -7,6 +7,7 @@ import Button from '../../components/ui/Button'
 import { Card, CardBody, CardHeader } from '../../components/ui/Card'
 import Badge from '../../components/ui/Badge'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
+import InstallAppCard from '../../components/pwa/InstallAppCard'
 import { useToast } from '../../components/ui/Toast'
 import { db, getDatabaseInfo } from '../../database/db'
 import { getRecentAuditLogs } from '../../database/repositories/auditLogRepo'
@@ -186,6 +187,8 @@ export default function SettingsPage() {
             </label>
           </CardBody>
         </Card>
+
+        <InstallAppCard />
 
         <Card>
           <CardHeader title="Informasi aplikasi dan basis data" icon={Database} />
