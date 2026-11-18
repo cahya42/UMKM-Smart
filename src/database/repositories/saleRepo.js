@@ -63,10 +63,20 @@ export async function createSale(input) {
     db.stock_movements,
     db.cash_transactions,
     db.cash_accounts,
+    db.customers,
     db.audit_logs,
     async (tx) => {
       const account = await tx.table('cash_accounts').get(input.cashAccountId)
       if (!account) throw new Error('Akun kas tidak ditemukan. Pilih akun kas yang tersedia.')
+
+      let customer = null
+      if (input.customerId) {
+        customer = await tx.table('customers').get(input.customerId)
+        if (!customer) throw new Error('Pelanggan tidak ditemukan. Pilih pelanggan yang tersedia.')
+        if (customer.isActive === false) {
+          throw new Error(`Pelanggan ${customer.name} sedang nonaktif dan tidak dapat dipakai pada nota baru.`)
+        }
+      }
 
       const prepared = []
 
@@ -124,8 +134,8 @@ export async function createSale(input) {
         id: saleId,
         invoiceNumber,
         date: input.date,
-        customerId: null,
-        customerName: (input.customerName ?? '').trim(),
+        customerId: customer?.id ?? null,
+        customerName: customer?.name ?? '',
         subtotal,
         discount: saleDiscount,
         total,

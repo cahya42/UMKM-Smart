@@ -10,11 +10,11 @@ import SaleForm from './pages/sales/SaleForm'
 import ExpensesPage from './pages/expenses/ExpensesPage'
 import CashPage from './pages/cash/CashPage'
 import ReportsPage from './pages/reports/ReportsPage'
+import ContactsPage from './pages/contacts/ContactsPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import BackupPage from './pages/backup/BackupPage'
 import AdvisorPage from './pages/advisor/AdvisorPage'
 import ActivationPage from './pages/activation/ActivationPage'
-import ComingSoonPage from './pages/ComingSoonPage'
 import { LicenseProvider, useLicense } from './services/license/LicenseContext'
 import LoadingScreen from './components/ui/LoadingScreen'
 
@@ -50,27 +50,9 @@ export default function App() {
             <Route path="kas" element={<CashPage />} />
             <Route path="laporan" element={<ReportsPage />} />
 
-            {/* Modul tahap berikutnya: navigasi dan tabel sudah siap, fitur menyusul. */}
-            <Route
-              path="pelanggan"
-              element={
-                <ComingSoonPage
-                  title="Pelanggan"
-                  stage={4}
-                  description="Simpan kontak pelanggan untuk kebutuhan transaksi dan analisis pelanggan."
-                />
-              }
-            />
-            <Route
-              path="pemasok"
-              element={
-                <ComingSoonPage
-                  title="Pemasok"
-                  stage={4}
-                  description="Simpan kontak pemasok beserta jenis barang atau jasa yang dipasok."
-                />
-              }
-            />
+            <Route path="pelanggan" element={<ContactsPage kind="pelanggan" />} />
+            <Route path="pemasok" element={<ContactsPage kind="pemasok" />} />
+
             <Route path="advisor" element={<AdvisorPage />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />

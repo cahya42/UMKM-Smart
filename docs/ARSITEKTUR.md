@@ -4,7 +4,7 @@ Dokumen ini adalah rancangan yang diminta pada bagian N master prompt: ringkasan
 diagram alur modul, struktur folder, rancangan database, navigasi, hubungan dengan layanan
 lisensi dan AI, kebutuhan teknis, serta rencana implementasi bertahap.
 
-Status saat ini: **Tahap 1 sampai Tahap 6 sudah diimplementasikan**, termasuk backup/restore tervalidasi, pemeriksaan konsistensi data, kas, laporan, dan SMART ADVISOR dengan persetujuan sebelum data dikirim. Modul yang belum aktif: pelanggan/pemasok (Tahap 4); PWA dan finalisasi lisensi menyusul pada Tahap 7-8. Menu yang belum aktif ditandai jelas di aplikasi.
+Status saat ini: **Tahap 1 sampai Tahap 6 sudah diimplementasikan**, termasuk backup/restore tervalidasi, pemeriksaan konsistensi data, kas, laporan, dan SMART ADVISOR dengan persetujuan sebelum data dikirim. Modul yang belum aktif: PWA dan finalisasi lisensi menyusul pada Tahap 7-8. Menu yang belum aktif ditandai jelas di aplikasi.
 
 ---
 
@@ -132,8 +132,8 @@ umkm-smart/
     │   ├── sales/                 # (Tahap 4)
     │   ├── expenses/              # (Tahap 4)
     │   ├── cash/                  # (Tahap 5)
-    │   ├── customers/             # (Tahap 4)
-    │   ├── suppliers/             # (Tahap 4)
+    │   ├── contacts/              # (Tahap 4) ContactsPage + ContactFormDialog
+    │   │                          #           untuk pelanggan dan pemasok
     │   ├── reports/               # (Tahap 5)
     │   ├── backup/                # Backup & Data (Tahap 5, bagian Tahap 7 dipercepat)
     │   ├── advisor/               # (Tahap 6) AdvisorPage, AdvisorChat,
@@ -209,6 +209,7 @@ sales (1) --< sale_items >-- products          (sale_items.costPrice = HPP saat 
 sales (1) --< cash_transactions (refType='sale')
 expenses (1) --< cash_transactions (refType='expense')
 cash_accounts (1) --< cash_transactions
+customers (1) --< sales (customerId)              suppliers (1) --< stock_movements (supplierId)
 advisor_conversations (1) --< advisor_messages
 ```
 
@@ -262,8 +263,8 @@ Menu utama (sidebar pada layar besar, drawer pada layar kecil):
 | Operasional | Penjualan | `/penjualan` | Tahap 4 - aktif |
 | Operasional | Pengeluaran | `/pengeluaran` | Tahap 4 - aktif |
 | Operasional | Kas & Rekening | `/kas` | Tahap 5 - aktif |
-| Relasi | Pelanggan | `/pelanggan` | Tahap 4 |
-| Relasi | Pemasok | `/pemasok` | Tahap 4 |
+| Relasi | Pelanggan | `/pelanggan` | Tahap 4 - aktif |
+| Relasi | Pemasok | `/pemasok` | Tahap 4 - aktif |
 | Analisis | Laporan Usaha | `/laporan` | Tahap 5 - aktif |
 | Analisis | SMART ADVISOR | `/advisor` | Tahap 6 - aktif |
 | Sistem | Pengaturan | `/pengaturan` | Tahap 1 - aktif |
@@ -416,7 +417,7 @@ Keterbatasan teknis yang harus diketahui pengguna:
 | 1 | Fondasi: React+Vite, struktur folder, Dexie 20 tabel, router, layout, dashboard awal, profil usaha, fondasi lisensi | **Selesai** |
 | 2 | Produk & persediaan: kategori, satuan, CRUD produk, riwayat harga, kartu stok, peringatan stok | **Selesai** |
 | 3 | Kalkulator HPP: komponen biaya per jenis usaha, HPP per unit, riwayat, simulasi harga/margin | **Selesai** |
-| 4 | Transaksi: penjualan + pembatalan aman, pengeluaran, integrasi stok dan kas, pelanggan/pemasok | **Selesai (kecuali pelanggan/pemasok)** |
+| 4 | Transaksi: penjualan + pembatalan aman, pengeluaran, integrasi stok dan kas, pelanggan/pemasok | **Selesai** |
 | 5 | Keuangan & laporan: akun kas, transfer, dashboard lengkap, 9 laporan, ekspor Excel/PDF; backup/restore + pemeriksaan konsistensi | **Selesai** |
 | 6 | SMART ADVISOR: chat, ringkasan kontekstual, adapter AI, proxy, simulasi, riwayat, privasi | **Selesai (proxy disiapkan penerbit)** |
 | 7 | Backup & PWA: ekspor/impor tervalidasi, pemulihan, manifest, offline, pembaruan | Sebagian (backup/restore & pemeriksaan selesai; PWA dan backup terjadwal belum) |

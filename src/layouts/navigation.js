@@ -44,8 +44,8 @@ export const NAV_GROUPS = [
   {
     label: 'Relasi',
     items: [
-      { to: '/pelanggan', label: 'Pelanggan', icon: Users, stage: 4 },
-      { to: '/pemasok', label: 'Pemasok', icon: Truck, stage: 4 },
+      { to: '/pelanggan', label: 'Pelanggan', icon: Users },
+      { to: '/pemasok', label: 'Pemasok', icon: Truck },
     ],
   },
   {

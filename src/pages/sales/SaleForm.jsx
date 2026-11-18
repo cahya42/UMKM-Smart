@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import Button from '../../components/ui/Button'
 import { Card, CardBody, CardHeader } from '../../components/ui/Card'
 import { Field } from '../../components/ui/Field'
+import ContactFormDialog from '../contacts/ContactFormDialog'
 import { useToast } from '../../components/ui/Toast'
 import { db } from '../../database/db'
 import { createSale } from '../../database/repositories/saleRepo'
@@ -24,15 +25,19 @@ export default function SaleForm() {
   const navigate = useNavigate()
 
   const data = useLiveQuery(async () => {
-    const [products, accounts, cashTransactions] = await Promise.all([
+    const [products, accounts, cashTransactions, customers] = await Promise.all([
       db.products.toArray(),
       db.cash_accounts.toArray(),
       db.cash_transactions.toArray(),
+      db.customers.toArray(),
     ])
 
     return {
       products: products
         .filter((product) => product.isActive !== false)
+        .sort((a, b) => a.name.localeCompare(b.name, 'id')),
+      customers: customers
+        .filter((customer) => customer.isActive !== false)
         .sort((a, b) => a.name.localeCompare(b.name, 'id')),
       accounts: accounts.filter((account) => account.isActive !== false),
       cash: computeCashBalances(accounts, cashTransactions),
@@ -40,7 +45,8 @@ export default function SaleForm() {
   }, [])
 
   const [date, setDate] = useState(toDateKey())
-  const [customerName, setCustomerName] = useState('')
+  const [customerId, setCustomerId] = useState('')
+  const [customerDialogOpen, setCustomerDialogOpen] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('tunai')
   const [cashAccountId, setCashAccountId] = useState('')
   const [discount, setDiscount] = useState('')
@@ -136,7 +142,7 @@ export default function SaleForm() {
 
     const payload = {
       date,
-      customerName,
+      customerId,
       paymentMethod,
       cashAccountId,
       discount: Number(discount || 0),
@@ -189,7 +195,8 @@ export default function SaleForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
+    <>
+      <form onSubmit={handleSubmit} noValidate>
       <div className="grid grid--sidebar">
         <div className="stack">
           <Card>
@@ -350,15 +357,35 @@ export default function SaleForm() {
                   </select>
                 </Field>
 
-                <Field label="Nama pelanggan" htmlFor="saleCustomer" error={errors.customerName} hint="Opsional.">
-                  <input
-                    id="saleCustomer"
-                    className={`input ${errors.customerName ? 'input--error' : ''}`.trim()}
-                    value={customerName}
-                    onChange={(event) => setField('customerName', event.target.value, setCustomerName)}
-                    placeholder="Pelanggan umum"
-                    maxLength={80}
-                  />
+                <Field
+                  label="Pelanggan"
+                  htmlFor="saleCustomer"
+                  error={errors.customerId}
+                  hint="Opsional. Pilih pelanggan terdaftar agar riwayat pembeliannya tercatat."
+                >
+                  <div className="row" style={{ gap: 8 }}>
+                    <select
+                      id="saleCustomer"
+                      className={`select ${errors.customerId ? 'select--error' : ''}`.trim()}
+                      value={customerId}
+                      onChange={(event) => setField('customerId', event.target.value, setCustomerId)}
+                    >
+                      <option value="">Pelanggan umum</option>
+                      {data.customers.map((customer) => (
+                        <option key={customer.id} value={customer.id}>
+                          {customer.name}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={Plus}
+                      onClick={() => setCustomerDialogOpen(true)}
+                    >
+                      Baru
+                    </Button>
+                  </div>
                 </Field>
 
                 <Field label="Akun kas penerima" htmlFor="saleAccount" required error={errors.cashAccountId}>
@@ -473,6 +500,14 @@ export default function SaleForm() {
           </Card>
         </div>
       </div>
-    </form>
+      </form>
+
+      <ContactFormDialog
+        kind="pelanggan"
+        open={customerDialogOpen}
+        onClose={() => setCustomerDialogOpen(false)}
+        onSaved={(customer) => setCustomerId(customer.id)}
+      />
+    </>
   )
 }

@@ -16,14 +16,23 @@ import SaleDetailDialog from './SaleDetailDialog'
 
 export default function SaleList() {
   const toast = useToast()
-  const [filters, setFilters] = useState({ month: toDateKey().slice(0, 7), status: 'semua', search: '' })
+  const [filters, setFilters] = useState({
+    month: toDateKey().slice(0, 7),
+    status: 'semua',
+    search: '',
+    customerId: '',
+  })
   const [detailId, setDetailId] = useState(null)
   const [cancelTarget, setCancelTarget] = useState(null)
   const [reason, setReason] = useState('')
   const [canceling, setCanceling] = useState(false)
 
   const data = useLiveQuery(async () => {
-    const [sales, accounts] = await Promise.all([listSales({ month: filters.month }), db.cash_accounts.toArray()])
+    const [sales, accounts, customers] = await Promise.all([
+      listSales({ month: filters.month }),
+      db.cash_accounts.toArray(),
+      db.customers.toArray(),
+    ])
     const ids = sales.map((sale) => sale.id)
     const items = ids.length > 0 ? await db.sale_items.where('saleId').anyOf(ids).toArray() : []
 
@@ -34,7 +43,12 @@ export default function SaleList() {
       itemsBySale.set(item.saleId, list)
     }
 
-    return { sales, accounts, itemsBySale }
+    return {
+      sales,
+      accounts,
+      itemsBySale,
+      customers: customers.sort((a, b) => a.name.localeCompare(b.name, 'id')),
+    }
   }, [filters.month])
 
   const rows = useMemo(() => {
@@ -43,6 +57,7 @@ export default function SaleList() {
 
     return data.sales.filter((sale) => {
       if (filters.status !== 'semua' && sale.status !== filters.status) return false
+      if (filters.customerId && sale.customerId !== filters.customerId) return false
       if (search) {
         const haystack = `${sale.invoiceNumber} ${sale.customerName ?? ''}`.toLowerCase()
         if (!haystack.includes(search)) return false
@@ -117,6 +132,20 @@ export default function SaleList() {
                 aria-label="Bulan penjualan"
                 style={{ width: 'auto' }}
               />
+
+              <select
+                className="select"
+                value={filters.customerId}
+                onChange={(event) => setFilters({ ...filters, customerId: event.target.value })}
+                aria-label="Filter pelanggan"
+              >
+                <option value="">Semua pelanggan</option>
+                {data.customers.map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.name}
+                  </option>
+                ))}
+              </select>
 
               <select
                 className="select"

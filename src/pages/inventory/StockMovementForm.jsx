@@ -1,10 +1,13 @@
-import { ArrowDownToLine, ArrowUpFromLine, ClipboardCheck, Save } from 'lucide-react'
+import { ArrowDownToLine, ArrowUpFromLine, ClipboardCheck, Plus, Save } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Button from '../../components/ui/Button'
 import { Card, CardBody, CardHeader } from '../../components/ui/Card'
 import { Field } from '../../components/ui/Field'
 import { useToast } from '../../components/ui/Toast'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../../database/db'
 import { recordStockMovement } from '../../database/repositories/stockRepo'
+import ContactFormDialog from '../contacts/ContactFormDialog'
 import { formatNumber, toQuantity } from '../../utils/money'
 import { toDateKey } from '../../utils/dates'
 import { OUT_REASONS } from '../../utils/inventory'
@@ -41,6 +44,7 @@ const EMPTY_FORM = {
   note: '',
   unitCost: '',
   supplierName: '',
+  supplierId: '',
   reason: '',
 }
 
@@ -50,6 +54,15 @@ export default function StockMovementForm({ mode, products, units, loading }) {
   const [form, setForm] = useState(EMPTY_FORM)
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
+  const [supplierDialogOpen, setSupplierDialogOpen] = useState(false)
+
+  const suppliers = useLiveQuery(
+    async () =>
+      (await db.suppliers.toArray())
+        .filter((supplier) => supplier.isActive !== false)
+        .sort((a, b) => a.name.localeCompare(b.name, 'id')),
+    [],
+  ) ?? []
 
   useEffect(() => {
     setForm((current) => ({ ...EMPTY_FORM, productId: current.productId, date: toDateKey() }))
@@ -81,6 +94,7 @@ export default function StockMovementForm({ mode, products, units, loading }) {
       note: form.note,
       unitCost: Number(form.unitCost || 0),
       supplierName: form.supplierName,
+      supplierId: form.supplierId,
       reason: form.reason,
     }
 
@@ -118,6 +132,7 @@ export default function StockMovementForm({ mode, products, units, loading }) {
   }
 
   return (
+    <>
     <Card>
       <CardHeader title={config.title} subtitle={config.description} icon={Icon} />
       <CardBody>
@@ -201,15 +216,35 @@ export default function StockMovementForm({ mode, products, units, loading }) {
                     />
                   </Field>
 
-                  <Field label="Nama pemasok" htmlFor="movementSupplier" error={errors.supplierName} hint="Opsional.">
-                    <input
-                      id="movementSupplier"
-                      className={`input ${errors.supplierName ? 'input--error' : ''}`.trim()}
-                      value={form.supplierName}
-                      onChange={(event) => setField('supplierName', event.target.value)}
-                      placeholder="Nama pemasok"
-                      maxLength={80}
-                    />
+                  <Field
+                    label="Pemasok"
+                    htmlFor="movementSupplier"
+                    error={errors.supplierName}
+                    hint="Opsional. Pilih pemasok terdaftar agar barang masuk tercatat pada pemasok tersebut."
+                  >
+                    <div className="row" style={{ gap: 8 }}>
+                      <select
+                        id="movementSupplier"
+                        className="select"
+                        value={form.supplierId}
+                        onChange={(event) => setField('supplierId', event.target.value)}
+                      >
+                        <option value="">Tanpa pemasok</option>
+                        {suppliers.map((supplier) => (
+                          <option key={supplier.id} value={supplier.id}>
+                            {supplier.name}
+                          </option>
+                        ))}
+                      </select>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        icon={Plus}
+                        onClick={() => setSupplierDialogOpen(true)}
+                      >
+                        Baru
+                      </Button>
+                    </div>
                   </Field>
                 </>
               ) : null}
@@ -261,5 +296,13 @@ export default function StockMovementForm({ mode, products, units, loading }) {
         )}
       </CardBody>
     </Card>
+
+    <ContactFormDialog
+      kind="pemasok"
+      open={supplierDialogOpen}
+      onClose={() => setSupplierDialogOpen(false)}
+      onSaved={(supplier) => setField('supplierId', supplier.id)}
+    />
+    </>
   )
 }

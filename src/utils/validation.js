@@ -82,6 +82,34 @@ export const categorySchema = z.object({
     .max(60, 'Nama kategori maksimal 60 karakter'),
 })
 
+export const contactSchema = z.object({
+  name: z
+    .string({ required_error: 'Nama wajib diisi' })
+    .trim()
+    .min(2, 'Nama minimal 2 karakter')
+    .max(80, 'Nama maksimal 80 karakter'),
+  phone: z
+    .string()
+    .trim()
+    .max(30, 'Nomor telepon maksimal 30 karakter')
+    .refine((value) => value === '' || /^[0-9+()\-\s]+$/.test(value), {
+      message: 'Nomor telepon hanya boleh berisi angka, spasi, +, -, dan tanda kurung',
+    })
+    .optional()
+    .default(''),
+  email: z
+    .string()
+    .trim()
+    .max(80, 'Email maksimal 80 karakter')
+    .refine((value) => value === '' || z.string().email().safeParse(value).success, {
+      message: 'Format email tidak valid',
+    })
+    .optional()
+    .default(''),
+  address: z.string().trim().max(200, 'Alamat maksimal 200 karakter').optional().default(''),
+  note: z.string().trim().max(200, 'Catatan maksimal 200 karakter').optional().default(''),
+})
+
 export const unitSchema = z.object({
   name: z
     .string({ required_error: 'Nama satuan wajib diisi' })
@@ -139,7 +167,7 @@ export const saleItemSchema = z.object({
 
 export const saleSchema = z.object({
   date: z.string().regex(DATE_KEY_PATTERN, 'Tanggal penjualan tidak valid'),
-  customerName: z.string().trim().max(80, 'Nama pelanggan maksimal 80 karakter').optional().default(''),
+  customerId: z.string().optional().default(''),
   paymentMethod: z.enum(['tunai', 'transfer', 'qris', 'ewallet', 'lainnya'], {
     errorMap: () => ({ message: 'Pilih metode pembayaran' }),
   }),
@@ -204,6 +232,7 @@ export const stockMovementSchema = z.object({
   note: z.string().trim().max(200, 'Keterangan maksimal 200 karakter').optional().default(''),
   unitCost: moneyField.optional().default(0),
   supplierName: z.string().trim().max(80, 'Nama pemasok maksimal 80 karakter').optional().default(''),
+  supplierId: z.string().optional().default(''),
   reason: z.string().trim().max(80, 'Alasan maksimal 80 karakter').optional().default(''),
 })
 

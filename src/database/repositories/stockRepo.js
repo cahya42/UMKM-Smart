@@ -30,13 +30,14 @@ export async function recordStockMovement({
   note = '',
   unitCost = 0,
   supplierName = '',
+  supplierId = '',
   reason = '',
 }) {
   if (!DESCRIPTION_BY_TYPE[type]) {
     throw new Error('Jenis pergerakan stok tidak dikenal.')
   }
 
-  return db.transaction('rw', db.products, db.stock_movements, db.audit_logs, async (tx) => {
+  return db.transaction('rw', db.products, db.stock_movements, db.suppliers, db.audit_logs, async (tx) => {
     const product = await tx.table('products').get(productId)
     if (!product) throw new Error('Produk tidak ditemukan.')
     if (product.type !== 'barang' || product.trackStock === false) {
@@ -69,6 +70,15 @@ export async function recordStockMovement({
       )
     }
 
+    let supplier = null
+    if (supplierId) {
+      supplier = await tx.table('suppliers').get(supplierId)
+      if (!supplier) throw new Error('Pemasok tidak ditemukan. Pilih pemasok yang tersedia.')
+      if (supplier.isActive === false) {
+        throw new Error(`Pemasok ${supplier.name} sedang nonaktif dan tidak dapat dipakai.`)
+      }
+    }
+
     const now = new Date().toISOString()
     const movement = {
       id: crypto.randomUUID(),
@@ -79,7 +89,8 @@ export async function recordStockMovement({
       balanceBefore: before,
       balanceAfter: after,
       unitCost: toRupiah(unitCost),
-      supplierName: supplierName.trim(),
+      supplierId: supplier?.id ?? null,
+      supplierName: supplier?.name ?? supplierName.trim(),
       reason: reason.trim(),
       note: note.trim(),
       date,

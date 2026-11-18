@@ -1,19 +1,20 @@
-# Catatan Tahap 4 - Penjualan, Pembatalan, dan Pengeluaran
+# Catatan Tahap 4 - Penjualan, Pembatalan, Pengeluaran, Pelanggan & Pemasok
 
 ## Tujuan tahap
 
 Menutup alur uang inti: penjualan mengurangi stok dan menambah kas, pembatalan mengembalikan
-keduanya lewat transaksi pembalik, dan pengeluaran mengurangi kas. Setelah tahap ini dashboard,
-kartu stok, dan laporan memiliki data nyata.
+keduanya lewat transaksi pembalik, dan pengeluaran mengurangi kas. Tahap ini juga mengaktifkan
+data relasi (pelanggan dan pemasok) agar nota dan barang masuk terhubung ke kontak yang benar.
 
 ## Yang sudah berfungsi
 
 ### Penjualan (`/penjualan`)
 
-1. **Daftar nota** dengan filter bulan, status (selesai/dibatalkan), dan pencarian nomor nota
-   atau pelanggan.
-2. **Transaksi baru** (`/penjualan/baru`): tanggal, pelanggan (opsional), metode pembayaran,
-   akun kas penerima, baris produk (jumlah, harga jual, diskon baris), diskon nota, dan catatan.
+1. **Daftar nota** dengan filter bulan, pelanggan, status (selesai/dibatalkan), dan pencarian nomor
+   nota atau pelanggan.
+2. **Transaksi baru** (`/penjualan/baru`): tanggal, pelanggan terdaftar (opsional), metode
+   pembayaran, akun kas penerima, baris produk (jumlah, harga jual, diskon baris), diskon nota,
+   dan catatan.
 3. **Nomor nota otomatis** `INV-YYYYMMDD-NNN` per hari, unik dan tidak dapat diubah pengguna.
 4. **Pengurangan stok otomatis** untuk produk barang yang melacak stok, dengan pergerakan
    `penjualan` yang menyimpan saldo sebelum/sesudah. Produk jasa tidak menyentuh stok.
@@ -43,6 +44,30 @@ kartu stok, dan laporan memiliki data nyata.
 5. **Pembatalan pengeluaran** menandai status `dibatalkan` dan mencatat kas masuk pembalik
    (`expense_cancel`), bukan menghapus catatan.
 
+### Pelanggan (`/pelanggan`) dan Pemasok (`/pemasok`)
+
+Keduanya memakai satu komponen `ContactsPage` dengan dua jenis data:
+
+| Aspek | Pelanggan | Pemasok |
+|---|---|---|
+| Tabel | `customers` | `suppliers` |
+| Dipakai di | formulir penjualan, filter daftar nota | formulir barang masuk (Persediaan) |
+| Kolom ringkasan | jumlah nota & total belanja (nota aktif) | jumlah barang masuk & nilai pembelian |
+| Kolom tabel data | `sales.customerId` | `stock_movements.supplierId` |
+
+Fitur yang tersedia:
+
+1. **Daftar kontak** dengan pencarian nama/telepon/email dan filter status aktif/nonaktif.
+2. **Tambah/ubah kontak**: nama (wajib, unik), telepon, email, alamat, catatan.
+3. **Nonaktifkan** kontak agar tidak muncul di pilihan transaksi baru; riwayatnya tetap utuh.
+4. **Hapus permanen** hanya untuk kontak yang belum dipakai transaksi. Kontak yang sudah dipakai
+   ditolak dengan pesan yang menyebut jumlah transaksinya.
+5. **Pembuatan cepat dari transaksi**: tombol "Baru" pada formulir penjualan dan barang masuk
+   membuka dialog kontak yang sama, lalu langsung memilih kontak yang baru dibuat.
+6. **Audit log** mencatat tambah, ubah, aktif/nonaktif, dan hapus kontak.
+7. Nama kontak **disalin ke nota/pergerakan stok** (`customerName`, `supplierName`) agar riwayat
+   lama tidak berubah bila kontak kelak diganti namanya.
+
 ### Aturan data yang diterapkan
 
 - Semua operasi menulis header, detail, stok, kas, dan audit log dalam **satu transaksi Dexie**.
@@ -50,12 +75,13 @@ kartu stok, dan laporan memiliki data nyata.
 - Satu produk hanya boleh muncul satu kali per nota (mencegah baris ganda yang membingungkan).
 - Diskon baris maupun diskon nota tidak boleh melebihi subtotal.
 - Akun kas dan kategori wajib dipilih; akun atau kategori yang hilang ditolak dengan pesan.
+- Pelanggan/pemasok nonaktif ditolak saat dipakai pada transaksi baru.
 - Pembatalan selalu memakai transaksi pembalik; tidak ada penghapusan riwayat penjualan,
   pengeluaran, mutasi kas, atau pergerakan stok.
 - Tidak ada perubahan skema: seluruh tabel (`sales`, `sale_items`, `expenses`,
-  `cash_transactions`, `stock_movements`) sudah ada sejak v1.
-- Dashboard memakai data yang sama: omzet, HPP, laba kotor, pengeluaran, saldo kas, dan
-  transaksi terbaru langsung terisi.
+  `cash_transactions`, `stock_movements`, `customers`, `suppliers`) sudah ada sejak v1.
+- Dashboard dan laporan memakai data yang sama: omzet, HPP, laba kotor, pengeluaran, saldo kas,
+  dan transaksi terbaru langsung terisi.
 
 ## Langkah pengujian manual
 
@@ -82,14 +108,28 @@ kartu stok, dan laporan memiliki data nyata.
 3. Batalkan pengeluaran dengan alasan. Hasil: status "Dibatalkan", saldo kas kembali, catatan
    tetap ada.
 
-### D. Integrasi dashboard
+### D. Pelanggan terhubung ke nota
 
-- Omzet, HPP, laba kotor, pengeluaran, saldo kas, transaksi terbaru, dan kartu stok harus
-  konsisten dengan transaksi yang baru dicatat dan dibatalkan.
+1. Buka **Pelanggan** → **Tambah pelanggan**, isi nama "Bu Sari" dan nomor telepon, simpan.
+2. Hasil: pelanggan tampil di daftar dengan status Aktif dan kolom Nota 0.
+3. Buka **Penjualan** → **Transaksi baru**; pilihan pelanggan memuat "Bu Sari".
+   Tombol **Baru** di sebelahnya membuka dialog pelanggan yang sama dan hasilnya langsung terpilih.
+4. Simpan nota. Hasil: daftar pelanggan menampilkan Nota 1 dan Total belanja sebesar total nota;
+   detail nota menampilkan nama pelanggan.
+5. Coba hapus pelanggan tersebut. Hasil: ditolak karena sudah dipakai nota.
+
+### E. Pemasok terhubung ke barang masuk
+
+1. Buka **Pemasok** → **Tambah pemasok**, isi "Toko Beras", simpan.
+2. Buka **Persediaan** → **Barang masuk**; pilihan pemasok memuat "Toko Beras".
+3. Catat barang masuk 2 pcs dengan harga beli 12.000. Hasil: stok bertambah 2; kartu stok
+   menampilkan nama pemasok; daftar pemasok menampilkan Barang masuk 1 dan Nilai pembelian
+   Rp24.000.
+4. Coba hapus pemasok tersebut. Hasil: ditolak karena sudah dipakai pergerakan stok.
 
 ## Hasil pengujian
 
-Pengujian browser nyata (18 November 2026, Vite dev server + IndexedDB):
+### Pengujian awal (18 November 2026, penjualan/pengeluaran)
 
 | Skenario | Hasil |
 |---|---|
@@ -103,27 +143,49 @@ Pengujian browser nyata (18 November 2026, Vite dev server + IndexedDB):
 | Pembatalan pengeluaran | Status Dibatalkan; kas kembali 0; total pengeluaran 0 |
 | Penjualan aktif Rp20.000 + pengeluaran Rp10.000 | Dashboard: omzet 20.000, HPP 13.000, laba kotor 7.000, pengeluaran 10.000, laba bersih -3.000, kas 10.000; transaksi terbaru menandai "(dibatalkan)" |
 
-Bug yang ditemukan dan diperbaiki saat pengujian:
+Bug yang ditemukan dan diperbaiki saat pengujian awal:
 
 1. **Pengeluaran yang dibatalkan ikut dihitung di dashboard.** Ringkasan menampilkan Rp60.000
    (50.000 batal + 10.000 aktif); seharusnya Rp10.000. `summarizeExpenses`, grafik periode, dan
    transaksi terbaru kini mengabaikan pengeluaran berstatus `dibatalkan` dan menandainya di
    daftar aktivitas.
 
-Catatan: data uji dihapus dari browser setelah pengujian agar tidak tampil sebagai transaksi nyata.
+### Pengujian pembangunan ulang (18 November 2026, pelanggan & pemasok)
+
+| Skenario | Hasil |
+|---|---|
+| Tambah pelanggan "Bu Sari Uji" + telepon | Tersimpan; audit log "Menambahkan pelanggan Bu Sari Uji"; status Aktif |
+| Pilihan pelanggan di `Penjualan > Transaksi baru` | Berisi "Pelanggan umum" dan "Bu Sari Uji"; tombol Baru membuka dialog kontak |
+| Penjualan jasa Rp50.000 untuk Bu Sari Uji | Nota INV-20261118-001 tersimpan dengan `customerId` pelanggan, `customerName` tersalin; kas masuk Rp50.000 |
+| Daftar pelanggan setelah nota | Nota 1, Total belanja Rp50.000 |
+| Hapus pelanggan yang sudah dipakai nota | Ditolak; data pelanggan tetap ada |
+| Tambah pemasok "Toko Beras Uji" | Tersimpan; audit log "Menambahkan pemasok Toko Beras Uji" |
+| Pilihan pemasok di `Persediaan > Barang masuk` | Berisi "Tanpa pemasok" dan "Toko Beras Uji" |
+| Barang masuk 2 pcs harga beli Rp12.000 | Stok Beras Uji 15 -> 17; pergerakan menyimpan `supplierId`, nama pemasok, dan harga beli |
+| Daftar pemasok setelah barang masuk | Barang masuk 1, Nilai pembelian Rp24.000 |
+| Hapus pemasok yang sudah dipakai | Ditolak; data pemasok tetap ada |
+| Data uji dibersihkan | semua tabel transaksi/kontak/audit kembali 0 baris |
+
+Bug yang ditemukan dan diperbaiki saat pengujian ulang:
+
+1. **`supplierId` hilang dari payload barang masuk.** Skema Zod `stockMovementSchema` membuang
+   kunci yang tidak dideklarasikan, sehingga pergerakan stok menyimpan nama pemasok kosong.
+   Kunci `supplierId` ditambahkan ke skema dan tautan pemasok kini tersimpan.
+2. **Rantai validasi email kontak salah urutan.** `.refine()` diikuti `.max()` membuat modul
+   validasi gagal dimuat di browser. `.max()` dipindah sebelum `.refine()`.
 
 ## Batasan yang disadari
 
-1. **Pelanggan dan pemasok** masih berupa halaman "belum aktif"; nota memakai nama pelanggan
-   teks bebas, belum terhubung ke tabel `customers`.
-2. **Belum ada penjualan kredit/piutang**; semua nota dianggap dibayar penuh ke akun kas.
-3. **Belum ada pengelolaan akun kas** (Tahap 5); akun "Kas Tunai" berasal dari data awal.
-4. **Belum ada cetak/struk** dan ekspor nota.
-5. **Belum ada nomor nota yang dapat diubah** atau seri faktur pajak.
-6. Pembatalan memakai tanggal hari ini untuk mutasi pembalik, bukan tanggal nota asli.
-7. Belum ada penguncian antartab; Dexie menyerialkan transaksi tulis, tetapi dua tab yang
+1. **Belum ada penjualan kredit/piutang**; semua nota dianggap dibayar penuh ke akun kas.
+2. **Pelanggan/pemasok belum punya saldo, piutang, utang, atau limit kredit**; hanya data kontak
+   dan rekap transaksi.
+3. **Pemasok belum terhubung ke pembelian tunai** di luar pergerakan stok (belum ada modul
+   pembelian dengan nomor nota pembelian).
+4. **Belum ada pengelolaan akun kas** (Tahap 5); akun "Kas Tunai" berasal dari data awal.
+5. **Belum ada cetak/struk** dan ekspor nota.
+6. **Belum ada nomor nota yang dapat diubah** atau seri faktur pajak.
+7. Pembatalan memakai tanggal hari ini untuk mutasi pembalik, bukan tanggal nota asli.
+8. Belum ada penguncian antartab; Dexie menyerialkan transaksi tulis, tetapi dua tab yang
    menekan simpan bersamaan tetap perlu diuji terpisah.
-8. **Saldo kas dapat menjadi negatif** karena saldo awal akun kas baru dapat diatur pada
-   Tahap 5. Saldo negatif ditampilkan apa adanya agar tidak menyembunyikan masalah data.
 9. Grafik/dashboard memakai tanggal transaksi pembalik (hari ini), bukan tanggal nota asli,
    sehingga pembatalan nota lama terlihat pada periode berjalan.
