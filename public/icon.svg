@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="UMKM SMART">
+  <rect width="64" height="64" rx="14" fill="#14532d" />
+  <path d="M16 24h32l-3 22a4 4 0 0 1-4 3H23a4 4 0 0 1-4-3l-3-22Z" fill="#dcfce7" />
+  <path d="M24 24v-3a8 8 0 0 1 16 0v3" fill="none" stroke="#14532d" stroke-width="4" stroke-linecap="round" />
+  <path d="M25 33h14M25 40h9" stroke="#15803d" stroke-width="4" stroke-linecap="round" />
+</svg>

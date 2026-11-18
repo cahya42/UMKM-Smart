@@ -1,0 +1,70 @@
+import {
+  BarChart3,
+  Boxes,
+  Calculator,
+  CreditCard,
+  LayoutDashboard,
+  Package,
+  Receipt,
+  Settings2,
+  Sparkles,
+  Store,
+  Truck,
+  Users,
+  Wallet,
+} from 'lucide-react'
+
+/**
+ * Menu utama aplikasi. Urutan mengikuti alur kerja usaha:
+ * dashboard -> profil -> operasional -> relasi -> analisis -> pengaturan.
+ *
+ * `stage` menandai modul yang fiturnya baru tersedia pada tahap berikutnya,
+ * supaya pengguna tidak mengira modul sudah aktif padahal belum.
+ */
+export const NAV_GROUPS = [
+  {
+    label: 'Utama',
+    items: [
+      { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+      { to: '/profil', label: 'Profil Usaha', icon: Store },
+    ],
+  },
+  {
+    label: 'Operasional',
+    items: [
+      { to: '/produk', label: 'Produk', icon: Package },
+      { to: '/persediaan', label: 'Persediaan', icon: Boxes },
+      { to: '/hpp', label: 'Kalkulator HPP', icon: Calculator, stage: 3 },
+      { to: '/penjualan', label: 'Penjualan', icon: Receipt, stage: 4 },
+      { to: '/pengeluaran', label: 'Pengeluaran', icon: Wallet, stage: 4 },
+      { to: '/kas', label: 'Kas & Rekening', icon: CreditCard, stage: 5 },
+    ],
+  },
+  {
+    label: 'Relasi',
+    items: [
+      { to: '/pelanggan', label: 'Pelanggan', icon: Users, stage: 4 },
+      { to: '/pemasok', label: 'Pemasok', icon: Truck, stage: 4 },
+    ],
+  },
+  {
+    label: 'Analisis',
+    items: [
+      { to: '/laporan', label: 'Laporan Usaha', icon: BarChart3, stage: 5 },
+      { to: '/advisor', label: 'SMART ADVISOR', icon: Sparkles, stage: 6 },
+    ],
+  },
+  {
+    label: 'Sistem',
+    items: [{ to: '/pengaturan', label: 'Pengaturan', icon: Settings2 }],
+  },
+]
+
+export const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items)
+
+/** Mencari item menu yang cocok dengan path saat ini (untuk judul topbar). */
+export function findNavItem(pathname) {
+  if (pathname === '/') return ALL_NAV_ITEMS[0]
+  const target = ALL_NAV_ITEMS.find((item) => item.to !== '/' && pathname.startsWith(item.to))
+  return target ?? { label: 'UMKM SMART', to: pathname }
+}
