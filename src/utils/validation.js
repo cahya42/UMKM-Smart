@@ -127,6 +127,49 @@ export const productCostSchema = z.object({
   components: z.array(costComponentSchema).min(1, 'Tambahkan minimal satu komponen biaya'),
 })
 
+export const saleItemSchema = z.object({
+  productId: z.string().min(1, 'Pilih produk'),
+  qty: z
+    .number({ invalid_type_error: 'Masukkan angka jumlah' })
+    .gt(0, 'Jumlah harus lebih dari 0')
+    .max(1_000_000, 'Jumlah terlalu besar'),
+  price: moneyField,
+  discount: moneyField,
+})
+
+export const saleSchema = z.object({
+  date: z.string().regex(DATE_KEY_PATTERN, 'Tanggal penjualan tidak valid'),
+  customerName: z.string().trim().max(80, 'Nama pelanggan maksimal 80 karakter').optional().default(''),
+  paymentMethod: z.enum(['tunai', 'transfer', 'qris', 'ewallet', 'lainnya'], {
+    errorMap: () => ({ message: 'Pilih metode pembayaran' }),
+  }),
+  cashAccountId: z.string().min(1, 'Pilih akun kas penerima uang'),
+  discount: moneyField,
+  note: z.string().trim().max(200, 'Catatan maksimal 200 karakter').optional().default(''),
+  items: z.array(saleItemSchema).min(1, 'Tambahkan minimal satu produk'),
+})
+
+export const expenseSchema = z.object({
+  date: z.string().regex(DATE_KEY_PATTERN, 'Tanggal pengeluaran tidak valid'),
+  expenseCategoryId: z.string().min(1, 'Pilih kategori pengeluaran'),
+  cashAccountId: z.string().min(1, 'Pilih akun kas sumber dana'),
+  amount: moneyField.refine((value) => value > 0, { message: 'Nominal harus lebih dari 0' }),
+  description: z
+    .string({ required_error: 'Keterangan wajib diisi' })
+    .trim()
+    .min(3, 'Keterangan minimal 3 karakter')
+    .max(200, 'Keterangan maksimal 200 karakter'),
+  note: z.string().trim().max(200, 'Catatan maksimal 200 karakter').optional().default(''),
+})
+
+export const expenseCategorySchema = z.object({
+  name: z
+    .string({ required_error: 'Nama kategori wajib diisi' })
+    .trim()
+    .min(2, 'Nama kategori minimal 2 karakter')
+    .max(60, 'Nama kategori maksimal 60 karakter'),
+})
+
 export const stockMovementSchema = z.object({
   productId: z.string().min(1, 'Pilih produk'),
   type: z.enum(['masuk', 'keluar', 'penyesuaian']),

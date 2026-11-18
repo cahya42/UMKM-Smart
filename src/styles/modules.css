@@ -225,6 +225,20 @@
    Gaya modul Kalkulator HPP
    ============================================================ */
 
+/* Tabel baris transaksi (penjualan) */
+.line-table td {
+  vertical-align: top;
+}
+
+.line-table .input,
+.line-table .select {
+  min-width: 88px;
+}
+
+.line-table__product {
+  min-width: 200px;
+}
+
 .component-table td {
   vertical-align: top;
 }

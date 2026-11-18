@@ -4,7 +4,7 @@ Dokumen ini adalah rancangan yang diminta pada bagian N master prompt: ringkasan
 diagram alur modul, struktur folder, rancangan database, navigasi, hubungan dengan layanan
 lisensi dan AI, kebutuhan teknis, serta rencana implementasi bertahap.
 
-Status saat ini: **Tahap 1 sampai Tahap 3 sudah diimplementasikan**. Modul tahap 4-8 belum
+Status saat ini: **Tahap 1 sampai Tahap 4 (penjualan, pengeluaran, kas) sudah diimplementasikan**. Modul tahap 5-8 serta pelanggan dan pemasok belum
 aktif dan ditandai jelas di aplikasi (`T3`-`T6` pada menu).
 
 ---
@@ -250,8 +250,8 @@ Menu utama (sidebar pada layar besar, drawer pada layar kecil):
 | Operasional | Produk | `/produk` | Tahap 2 - aktif |
 | Operasional | Persediaan | `/persediaan` | Tahap 2 - aktif |
 | Operasional | Kalkulator HPP | `/hpp` | Tahap 3 - aktif |
-| Operasional | Penjualan | `/penjualan` | Tahap 4 |
-| Operasional | Pengeluaran | `/pengeluaran` | Tahap 4 |
+| Operasional | Penjualan | `/penjualan` | Tahap 4 - aktif |
+| Operasional | Pengeluaran | `/pengeluaran` | Tahap 4 - aktif |
 | Operasional | Kas & Rekening | `/kas` | Tahap 5 |
 | Relasi | Pelanggan | `/pelanggan` | Tahap 4 |
 | Relasi | Pemasok | `/pemasok` | Tahap 4 |
@@ -395,7 +395,7 @@ Keterbatasan teknis yang harus diketahui pengguna:
 | 1 | Fondasi: React+Vite, struktur folder, Dexie 20 tabel, router, layout, dashboard awal, profil usaha, fondasi lisensi | **Selesai** |
 | 2 | Produk & persediaan: kategori, satuan, CRUD produk, riwayat harga, kartu stok, peringatan stok | **Selesai** |
 | 3 | Kalkulator HPP: komponen biaya per jenis usaha, HPP per unit, riwayat, simulasi harga/margin | **Selesai** |
-| 4 | Transaksi: penjualan + pembatalan aman, pengeluaran, integrasi stok dan kas, pelanggan/pemasok | Belum |
+| 4 | Transaksi: penjualan + pembatalan aman, pengeluaran, integrasi stok dan kas, pelanggan/pemasok | **Selesai (kecuali pelanggan/pemasok)** |
 | 5 | Keuangan & laporan: akun kas, transfer, dashboard lengkap, 9 laporan, ekspor Excel/PDF | Belum |
 | 6 | SMART ADVISOR: chat, ringkasan kontekstual, adapter AI, proxy, simulasi, riwayat, privasi | Belum |
 | 7 | Backup & PWA: ekspor/impor tervalidasi, pemulihan, manifest, offline, pembaruan | Belum |

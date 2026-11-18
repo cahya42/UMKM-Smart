@@ -5,6 +5,9 @@ import ProfilePage from './pages/profile/ProfilePage'
 import ProductsPage from './pages/products/ProductsPage'
 import InventoryPage from './pages/inventory/InventoryPage'
 import HppPage from './pages/hpp/HppPage'
+import SalesPage from './pages/sales/SalesPage'
+import SaleForm from './pages/sales/SaleForm'
+import ExpensesPage from './pages/expenses/ExpensesPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import ActivationPage from './pages/activation/ActivationPage'
 import ComingSoonPage from './pages/ComingSoonPage'
@@ -36,28 +39,11 @@ export default function App() {
             <Route path="produk" element={<ProductsPage />} />
             <Route path="persediaan" element={<InventoryPage />} />
             <Route path="hpp" element={<HppPage />} />
+            <Route path="penjualan" element={<SalesPage />} />
+            <Route path="penjualan/baru" element={<SaleForm />} />
+            <Route path="pengeluaran" element={<ExpensesPage />} />
 
             {/* Modul tahap berikutnya: navigasi dan tabel sudah siap, fitur menyusul. */}
-            <Route
-              path="penjualan"
-              element={
-                <ComingSoonPage
-                  title="Penjualan"
-                  stage={4}
-                  description="Catat transaksi penjualan, kurangi stok otomatis, dan terima kas pada akun yang dipilih."
-                />
-              }
-            />
-            <Route
-              path="pengeluaran"
-              element={
-                <ComingSoonPage
-                  title="Pengeluaran Usaha"
-                  stage={4}
-                  description="Catat biaya operasional dengan kategori, sumber kas, keterangan, dan bukti transaksi."
-                />
-              }
-            />
             <Route
               path="kas"
               element={

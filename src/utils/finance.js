@@ -55,9 +55,14 @@ export function summarizeSales(sales, saleItems = []) {
   }
 }
 
+export function isCompletedExpense(expense) {
+  return Boolean(expense) && expense.status !== 'dibatalkan'
+}
+
 export function summarizeExpenses(expenses = []) {
-  const total = expenses.reduce((acc, expense) => acc + toRupiah(expense.amount), 0)
-  return { total, count: expenses.length }
+  const active = expenses.filter(isCompletedExpense)
+  const total = active.reduce((acc, expense) => acc + toRupiah(expense.amount), 0)
+  return { total, count: active.length }
 }
 
 /**
@@ -138,6 +143,7 @@ export function buildPeriodSeries(sales = [], expenses = [], range) {
       if (bucket) bucket.penjualan += toRupiah(sale.total)
     }
     for (const expense of expenses) {
+      if (!isCompletedExpense(expense)) continue
       const key = monthKeyOf(expense.date)
       const bucket = buckets.get(key)
       if (bucket) bucket.pengeluaran += toRupiah(expense.amount)
@@ -152,6 +158,7 @@ export function buildPeriodSeries(sales = [], expenses = [], range) {
       if (bucket) bucket.penjualan += toRupiah(sale.total)
     }
     for (const expense of expenses) {
+      if (!isCompletedExpense(expense)) continue
       const bucket = buckets.get(expense.date)
       if (bucket) bucket.pengeluaran += toRupiah(expense.amount)
     }
@@ -183,7 +190,7 @@ export function buildRecentActivity(sales = [], expenses = [], limit = 6) {
     date: expense.date,
     createdAt: expense.createdAt,
     amount: toRupiah(expense.amount),
-    canceled: false,
+    canceled: expense.status === 'dibatalkan',
   }))
 
   return [...saleEntries, ...expenseEntries]
