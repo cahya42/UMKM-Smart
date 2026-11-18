@@ -231,7 +231,6 @@ export const stockMovementSchema = z.object({
   date: z.string().regex(DATE_KEY_PATTERN, 'Tanggal tidak valid'),
   note: z.string().trim().max(200, 'Keterangan maksimal 200 karakter').optional().default(''),
   unitCost: moneyField.optional().default(0),
-  supplierName: z.string().trim().max(80, 'Nama pemasok maksimal 80 karakter').optional().default(''),
   supplierId: z.string().optional().default(''),
   reason: z.string().trim().max(80, 'Alasan maksimal 80 karakter').optional().default(''),
 })

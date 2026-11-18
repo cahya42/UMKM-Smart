@@ -29,7 +29,6 @@ export async function recordStockMovement({
   date,
   note = '',
   unitCost = 0,
-  supplierName = '',
   supplierId = '',
   reason = '',
 }) {
@@ -90,7 +89,7 @@ export async function recordStockMovement({
       balanceAfter: after,
       unitCost: toRupiah(unitCost),
       supplierId: supplier?.id ?? null,
-      supplierName: supplier?.name ?? supplierName.trim(),
+      supplierName: supplier?.name ?? '',
       reason: reason.trim(),
       note: note.trim(),
       date,

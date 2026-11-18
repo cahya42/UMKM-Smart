@@ -43,7 +43,6 @@ const EMPTY_FORM = {
   date: toDateKey(),
   note: '',
   unitCost: '',
-  supplierName: '',
   supplierId: '',
   reason: '',
 }
@@ -93,7 +92,6 @@ export default function StockMovementForm({ mode, products, units, loading }) {
       date: form.date,
       note: form.note,
       unitCost: Number(form.unitCost || 0),
-      supplierName: form.supplierName,
       supplierId: form.supplierId,
       reason: form.reason,
     }
@@ -219,7 +217,6 @@ export default function StockMovementForm({ mode, products, units, loading }) {
                   <Field
                     label="Pemasok"
                     htmlFor="movementSupplier"
-                    error={errors.supplierName}
                     hint="Opsional. Pilih pemasok terdaftar agar barang masuk tercatat pada pemasok tersebut."
                   >
                     <div className="row" style={{ gap: 8 }}>

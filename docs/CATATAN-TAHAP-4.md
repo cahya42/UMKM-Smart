@@ -158,7 +158,8 @@ Bug yang ditemukan dan diperbaiki saat pengujian awal:
 | Pilihan pelanggan di `Penjualan > Transaksi baru` | Berisi "Pelanggan umum" dan "Bu Sari Uji"; tombol Baru membuka dialog kontak |
 | Penjualan jasa Rp50.000 untuk Bu Sari Uji | Nota INV-20261118-001 tersimpan dengan `customerId` pelanggan, `customerName` tersalin; kas masuk Rp50.000 |
 | Daftar pelanggan setelah nota | Nota 1, Total belanja Rp50.000 |
-| Hapus pelanggan yang sudah dipakai nota | Ditolak; data pelanggan tetap ada |
+| Hapus pelanggan yang belum dipakai transaksi | Berhasil; baris hilang dari daftar dan audit log mencatat "Menghapus pelanggan ..." |
+| Hapus pelanggan yang sudah dipakai nota | Ditolak dengan pesan jumlah nota; data pelanggan tetap ada |
 | Tambah pemasok "Toko Beras Uji" | Tersimpan; audit log "Menambahkan pemasok Toko Beras Uji" |
 | Pilihan pemasok di `Persediaan > Barang masuk` | Berisi "Tanpa pemasok" dan "Toko Beras Uji" |
 | Barang masuk 2 pcs harga beli Rp12.000 | Stok Beras Uji 15 -> 17; pergerakan menyimpan `supplierId`, nama pemasok, dan harga beli |
@@ -173,6 +174,13 @@ Bug yang ditemukan dan diperbaiki saat pengujian ulang:
    Kunci `supplierId` ditambahkan ke skema dan tautan pemasok kini tersimpan.
 2. **Rantai validasi email kontak salah urutan.** `.refine()` diikuti `.max()` membuat modul
    validasi gagal dimuat di browser. `.max()` dipindah sebelum `.refine()`.
+3. **Hapus kontak kosong gagal karena tabel pemeriksaan tidak dibuka.** `deleteContact` membaca
+   `sales` dan `stock_movements` di dalam transaksi yang hanya membuka tabel kontak dan audit log,
+   sehingga Dexie melempar `NotFoundError` bahkan untuk kontak yang belum dipakai. Kedua tabel
+   kini ikut dibuka di transaksi yang sama.
+4. **Sisa `supplierName` pada formulir barang masuk.** Setelah pemasok dipilih lewat daftar,
+   field teks lama dihapus dari state, payload, dan skema validasi; nama pemasok tetap disalin ke
+   pergerakan stok sebagai arsip.
 
 ## Batasan yang disadari
 

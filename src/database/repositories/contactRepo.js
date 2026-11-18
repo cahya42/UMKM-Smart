@@ -198,11 +198,19 @@ export async function setContactActive(kind, id, isActive) {
 export async function deleteContact(kind, id) {
   const config = getConfig(kind)
 
-  return db.transaction('rw', db.table(config.table), db.audit_logs, async (tx) => {
-    const current = await tx.table(config.table).get(id)
-    if (!current) throw new Error(`${config.label} tidak ditemukan.`)
+  // Tabel transaksi ikut dibuka di dalam transaksi karena pemakaian kontak
+  // diperiksa dari `sales` (pelanggan) dan `stock_movements` (pemasok).
+  return db.transaction(
+    'rw',
+    db.table(config.table),
+    db.sales,
+    db.stock_movements,
+    db.audit_logs,
+    async (tx) => {
+      const current = await tx.table(config.table).get(id)
+      if (!current) throw new Error(`${config.label} tidak ditemukan.`)
 
-    if (kind === CONTACT_KINDS.PELANGGAN) {
+      if (kind === CONTACT_KINDS.PELANGGAN) {
       const used = await tx.table('sales').filter((sale) => sale.customerId === id).count()
       if (used > 0) {
         throw new Error(
