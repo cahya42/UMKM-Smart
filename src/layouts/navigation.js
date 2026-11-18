@@ -34,7 +34,7 @@ export const NAV_GROUPS = [
     items: [
       { to: '/produk', label: 'Produk', icon: Package },
       { to: '/persediaan', label: 'Persediaan', icon: Boxes },
-      { to: '/hpp', label: 'Kalkulator HPP', icon: Calculator, stage: 3 },
+      { to: '/hpp', label: 'Kalkulator HPP', icon: Calculator },
       { to: '/penjualan', label: 'Penjualan', icon: Receipt, stage: 4 },
       { to: '/pengeluaran', label: 'Pengeluaran', icon: Wallet, stage: 4 },
       { to: '/kas', label: 'Kas & Rekening', icon: CreditCard, stage: 5 },

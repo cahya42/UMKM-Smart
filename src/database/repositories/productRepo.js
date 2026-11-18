@@ -219,6 +219,8 @@ export async function deleteProduct(productId) {
     db.products,
     db.stock_movements,
     db.sale_items,
+    db.product_costs,
+    db.cost_components,
     db.product_price_history,
     db.audit_logs,
     async (tx) => {
@@ -242,6 +244,8 @@ export async function deleteProduct(productId) {
 
       await tx.table('stock_movements').bulkDelete(movements.map((movement) => movement.id))
       await tx.table('product_price_history').where('productId').equals(productId).delete()
+      await tx.table('cost_components').where('productId').equals(productId).delete()
+      await tx.table('product_costs').where('productId').equals(productId).delete()
       await tx.table('products').delete(productId)
 
       await addAuditLog(

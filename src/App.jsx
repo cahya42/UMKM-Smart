@@ -4,6 +4,7 @@ import DashboardPage from './pages/dashboard/DashboardPage'
 import ProfilePage from './pages/profile/ProfilePage'
 import ProductsPage from './pages/products/ProductsPage'
 import InventoryPage from './pages/inventory/InventoryPage'
+import HppPage from './pages/hpp/HppPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import ActivationPage from './pages/activation/ActivationPage'
 import ComingSoonPage from './pages/ComingSoonPage'
@@ -34,18 +35,9 @@ export default function App() {
 
             <Route path="produk" element={<ProductsPage />} />
             <Route path="persediaan" element={<InventoryPage />} />
+            <Route path="hpp" element={<HppPage />} />
 
             {/* Modul tahap berikutnya: navigasi dan tabel sudah siap, fitur menyusul. */}
-            <Route
-              path="hpp"
-              element={
-                <ComingSoonPage
-                  title="Kalkulator HPP"
-                  stage={3}
-                  description="Hitung HPP per unit untuk usaha produksi, perdagangan, dan jasa, lengkap dengan simulasi harga jual dan margin."
-                />
-              }
-            />
             <Route
               path="penjualan"
               element={

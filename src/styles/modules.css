@@ -221,6 +221,33 @@
   margin-top: 2px;
 }
 
+/* ============================================================
+   Gaya modul Kalkulator HPP
+   ============================================================ */
+
+.component-table td {
+  vertical-align: top;
+}
+
+.component-table .input,
+.component-table .select {
+  min-width: 88px;
+}
+
+.component-table__name {
+  min-width: 150px;
+}
+
+.component-table tfoot td {
+  font-weight: 550;
+}
+
+.hpp-sidebar {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
 @media (max-width: 640px) {
   .modal--wide {
     max-height: calc(100vh - 16px);

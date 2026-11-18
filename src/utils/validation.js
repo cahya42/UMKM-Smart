@@ -93,6 +93,40 @@ export const unitSchema = z.object({
 
 const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
+export const costComponentSchema = z.object({
+  costType: z.enum(['bahan', 'tenaga_kerja', 'overhead', 'lainnya'], {
+    errorMap: () => ({ message: 'Pilih jenis komponen biaya' }),
+  }),
+  name: z
+    .string({ required_error: 'Nama komponen wajib diisi' })
+    .trim()
+    .min(1, 'Nama komponen wajib diisi')
+    .max(80, 'Nama komponen maksimal 80 karakter'),
+  quantity: z
+    .number({ invalid_type_error: 'Masukkan angka jumlah' })
+    .gt(0, 'Jumlah komponen harus lebih dari 0')
+    .max(1_000_000, 'Jumlah terlalu besar'),
+  unitLabel: z.string().trim().max(20, 'Satuan maksimal 20 karakter').optional().default(''),
+  unitCost: moneyField,
+})
+
+export const productCostSchema = z.object({
+  productId: z.string().min(1, 'Pilih produk'),
+  businessType: z.string().trim().min(1, 'Pilih jenis usaha'),
+  effectiveDate: z.string().regex(DATE_KEY_PATTERN, 'Tanggal berlaku tidak valid'),
+  batchQuantity: z
+    .number({ invalid_type_error: 'Masukkan angka jumlah unit' })
+    .gt(0, 'Jumlah unit per batch harus lebih dari 0')
+    .max(1_000_000, 'Jumlah unit terlalu besar'),
+  sellingPrice: moneyField,
+  targetMargin: z
+    .number({ invalid_type_error: 'Masukkan angka target margin' })
+    .min(0, 'Target margin tidak boleh negatif')
+    .max(99, 'Target margin harus di bawah 100%'),
+  note: z.string().trim().max(300, 'Catatan maksimal 300 karakter').optional().default(''),
+  components: z.array(costComponentSchema).min(1, 'Tambahkan minimal satu komponen biaya'),
+})
+
 export const stockMovementSchema = z.object({
   productId: z.string().min(1, 'Pilih produk'),
   type: z.enum(['masuk', 'keluar', 'penyesuaian']),

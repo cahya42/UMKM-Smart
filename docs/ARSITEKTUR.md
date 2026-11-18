@@ -4,7 +4,7 @@ Dokumen ini adalah rancangan yang diminta pada bagian N master prompt: ringkasan
 diagram alur modul, struktur folder, rancangan database, navigasi, hubungan dengan layanan
 lisensi dan AI, kebutuhan teknis, serta rencana implementasi bertahap.
 
-Status saat ini: **Tahap 1 dan Tahap 2 sudah diimplementasikan**. Modul tahap 3-8 belum
+Status saat ini: **Tahap 1 sampai Tahap 3 sudah diimplementasikan**. Modul tahap 4-8 belum
 aktif dan ditandai jelas di aplikasi (`T3`-`T6` pada menu).
 
 ---
@@ -189,6 +189,9 @@ dan HPP, sedangkan `product_costs` khusus menyimpan hasil kalkulator HPP. Karena
 harga manual disimpan pada tabel tersendiri agar dapat ditampilkan dan diaudit, bukan
 ditumpuk di `audit_logs`.
 
+Tahap 3 memakai tabel `product_costs` dan `cost_components` yang sudah ada sejak skema v1,
+sehingga tidak memerlukan versi skema baru; data Tahap 2 tetap utuh.
+
 Relasi utama:
 
 ```
@@ -246,7 +249,7 @@ Menu utama (sidebar pada layar besar, drawer pada layar kecil):
 | Utama | Profil Usaha | `/profil` | Tahap 1 - aktif |
 | Operasional | Produk | `/produk` | Tahap 2 - aktif |
 | Operasional | Persediaan | `/persediaan` | Tahap 2 - aktif |
-| Operasional | Kalkulator HPP | `/hpp` | Tahap 3 |
+| Operasional | Kalkulator HPP | `/hpp` | Tahap 3 - aktif |
 | Operasional | Penjualan | `/penjualan` | Tahap 4 |
 | Operasional | Pengeluaran | `/pengeluaran` | Tahap 4 |
 | Operasional | Kas & Rekening | `/kas` | Tahap 5 |
@@ -391,7 +394,7 @@ Keterbatasan teknis yang harus diketahui pengguna:
 |---|---|---|
 | 1 | Fondasi: React+Vite, struktur folder, Dexie 20 tabel, router, layout, dashboard awal, profil usaha, fondasi lisensi | **Selesai** |
 | 2 | Produk & persediaan: kategori, satuan, CRUD produk, riwayat harga, kartu stok, peringatan stok | **Selesai** |
-| 3 | Kalkulator HPP: komponen biaya per jenis usaha, HPP per unit, riwayat, simulasi harga/margin | Belum |
+| 3 | Kalkulator HPP: komponen biaya per jenis usaha, HPP per unit, riwayat, simulasi harga/margin | **Selesai** |
 | 4 | Transaksi: penjualan + pembatalan aman, pengeluaran, integrasi stok dan kas, pelanggan/pemasok | Belum |
 | 5 | Keuangan & laporan: akun kas, transfer, dashboard lengkap, 9 laporan, ekspor Excel/PDF | Belum |
 | 6 | SMART ADVISOR: chat, ringkasan kontekstual, adapter AI, proxy, simulasi, riwayat, privasi | Belum |
