@@ -1,5 +1,5 @@
 import Dexie from 'dexie'
-import { DB_NAME, STORES_V1, STORES_V2 } from './schema'
+import { DB_NAME, STORES_V1, STORES_V2, STORES_V3 } from './schema'
 import { seedDatabase } from './seed'
 
 export const db = new Dexie(DB_NAME)
@@ -10,9 +10,11 @@ export const db = new Dexie(DB_NAME)
  *
  * v1 (Tahap 1): 20 tabel inti.
  * v2 (Tahap 2): menambah product_price_history untuk riwayat harga & HPP.
+ * v3: menambah backups untuk cadangan lokal cepat.
  */
 db.version(1).stores(STORES_V1)
 db.version(2).stores(STORES_V2)
+db.version(3).stores(STORES_V3)
 
 // Hanya berjalan saat database baru dibuat (bukan saat pembaruan versi).
 db.on('populate', (tx) => seedDatabase(tx))

@@ -89,3 +89,13 @@ export const STORES_V2 = {
   ...STORES_V1,
   product_price_history: 'id, productId, changedAt',
 }
+
+/**
+ * Skema versi 3: menambah penyimpanan cadangan lokal (bukan data usaha).
+ * Cadangan dipakai untuk memulihkan data dengan cepat tanpa berkas, dan
+ * sebagai jaring pengaman otomatis sebelum pemulihan dari berkas.
+ */
+export const STORES_V3 = {
+  ...STORES_V2,
+  backups: 'id, createdAt',
+}

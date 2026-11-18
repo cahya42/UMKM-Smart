@@ -4,8 +4,7 @@ Dokumen ini adalah rancangan yang diminta pada bagian N master prompt: ringkasan
 diagram alur modul, struktur folder, rancangan database, navigasi, hubungan dengan layanan
 lisensi dan AI, kebutuhan teknis, serta rencana implementasi bertahap.
 
-Status saat ini: **Tahap 1 sampai Tahap 4 (penjualan, pengeluaran, kas) sudah diimplementasikan**. Modul tahap 5-8 serta pelanggan dan pemasok belum
-aktif dan ditandai jelas di aplikasi (`T3`-`T6` pada menu).
+Status saat ini: **Tahap 1 sampai Tahap 5 sudah diimplementasikan**, termasuk backup/restore tervalidasi dan pemeriksaan konsistensi data. Modul yang belum aktif: pelanggan/pemasok (Tahap 4) dan SMART ADVISOR (Tahap 6); PWA dan finalisasi lisensi menyusul pada Tahap 7-8. Menu yang belum aktif ditandai jelas di aplikasi.
 
 ---
 
@@ -136,6 +135,7 @@ umkm-smart/
     │   ├── customers/             # (Tahap 4)
     │   ├── suppliers/             # (Tahap 4)
     │   ├── reports/               # (Tahap 5)
+    │   ├── backup/                # Backup & Data (Tahap 5, bagian Tahap 7 dipercepat)
     │   ├── advisor/               # (Tahap 6) AdvisorPage, AdvisorChat, AdvisorHistory,
     │   │                          #           DecisionSimulator
     │   └── ComingSoonPage.jsx
@@ -146,6 +146,7 @@ umkm-smart/
     │   └── repositories/          # akses data per entitas + audit log
     ├── services/
     │   ├── license/               # constants, device, storage, service, context
+    │   ├── backup/                # backupService (ekspor/impor/checksum), consistency
     │   └── ai/                    # (Tahap 6) aiService, aiProvider, aiContextService, aiPrompt
     ├── hooks/                     # useDashboardData, (tahap berikutnya)
     ├── utils/                     # money, dates, finance, validation
@@ -156,7 +157,7 @@ umkm-smart/
 
 ## 4. Rancangan database Dexie.js
 
-Nama database: `umkm-smart`, versi skema saat ini **2**. Primary key memakai UUID string
+Nama database: `umkm-smart`, versi skema saat ini **3**. Primary key memakai UUID string
 agar konsisten dan aman saat backup/restore. Tanggal usaha disimpan sebagai `YYYY-MM-DD`,
 waktu pencatatan sebagai ISO string. Kolom boolean tidak diindeks (batasan IndexedDB).
 
@@ -183,6 +184,11 @@ waktu pencatatan sebagai ISO string. Kolom boolean tidak diindeks (batasan Index
 | 19 | `advisor_conversations` | Percakapan SMART ADVISOR | id, title, createdAt, updatedAt |
 | 20 | `advisor_messages` | Pesan dalam percakapan | id, conversationId, role, createdAt |
 | 21 | `product_price_history` | Riwayat harga beli, harga jual, dan HPP tiap produk (tabel tambahan, ditambahkan pada skema v2) | id, productId, changedAt |
+| 22 | `backups` | Cadangan lokal cepat (payload JSON + metadata), maksimal 2 terbaru. **Bukan data usaha**; tidak ikut diekspor | id, createdAt |
+
+Catatan tabel ke-22: tabel `backups` ditambahkan pada skema v3 untuk pemulihan tanpa berkas dan
+jaring pengaman otomatis sebelum pemulihan dari berkas. Isinya tidak dihitung sebagai data usaha
+dan tidak disertakan dalam berkas cadangan.
 
 Catatan tabel ke-21: master prompt mewajibkan setiap produk memiliki riwayat perubahan harga
 dan HPP, sedangkan `product_costs` khusus menyimpan hasil kalkulator HPP. Karena itu riwayat
@@ -231,11 +237,13 @@ Contoh bentuk record (kolom penting):
 
 - `db.version(1).stores(STORES_V1)` tidak boleh diubah setelah dipakai.
 - Versi 2 sudah ditambahkan: `db.version(2).stores(STORES_V2)` (menambah
-  `product_price_history`). Perubahan berikutnya memakai pola yang sama.
+  `product_price_history`). Versi 3 menambah `backups` tanpa mengubah data usaha.
+  Perubahan berikutnya memakai pola yang sama.
 - `db.on('populate')` hanya untuk database baru; data referensi baru pada versi lanjutan
   harus ditambahkan lewat `upgrade()`, bukan dengan menghapus database.
-- Sebelum impor/restore (Tahap 7): cadangkan data lama, validasi versi file backup, lalu
-  jalankan migrasi bertahap.
+- Impor/restore (sudah tersedia): berkas divalidasi (format, versi, kelengkapan tabel, jumlah
+  baris, checksum SHA-256), data saat ini dicadangkan otomatis, lalu seluruh tabel ditimpa dalam
+  satu transaksi. Pengaturan lisensi perangkat dipertahankan.
 
 ---
 
@@ -252,18 +260,20 @@ Menu utama (sidebar pada layar besar, drawer pada layar kecil):
 | Operasional | Kalkulator HPP | `/hpp` | Tahap 3 - aktif |
 | Operasional | Penjualan | `/penjualan` | Tahap 4 - aktif |
 | Operasional | Pengeluaran | `/pengeluaran` | Tahap 4 - aktif |
-| Operasional | Kas & Rekening | `/kas` | Tahap 5 |
+| Operasional | Kas & Rekening | `/kas` | Tahap 5 - aktif |
 | Relasi | Pelanggan | `/pelanggan` | Tahap 4 |
 | Relasi | Pemasok | `/pemasok` | Tahap 4 |
-| Analisis | Laporan Usaha | `/laporan` | Tahap 5 |
+| Analisis | Laporan Usaha | `/laporan` | Tahap 5 - aktif |
 | Analisis | SMART ADVISOR | `/advisor` | Tahap 6 |
 | Sistem | Pengaturan | `/pengaturan` | Tahap 1 - aktif |
+| Sistem | Backup & Data | `/backup` | Tahap 5 - aktif |
 | - | Aktivasi lisensi | `/aktivasi` | Tahap 1 - aktif |
 
 Halaman tambahan yang direncanakan:
 
-- `/penjualan/baru`, `/penjualan/:id` (detail + cetak bukti)
-- `/pengeluaran/baru`, `/kas/transfer`, `/laporan/:jenis`
+- `/penjualan/baru` sudah ada; `/penjualan/:id` dan cetak bukti belum
+- `/pengeluaran/baru` dan `/kas/transfer` berupa tab/dialog di halaman terkait
+- `/laporan/:jenis` masih berupa pemilih laporan di satu halaman
 - `/advisor/simulasi` (simulasi keputusan)
 
 Dashboard (Tahap 1) menampilkan: penjualan hari ini, penjualan bulan ini, omzet/HPP/laba
@@ -371,9 +381,9 @@ Aturan:
 | Database lokal | Dexie 4 (IndexedDB), skema berversi |
 | Ikon & grafik | lucide-react, recharts |
 | Validasi | zod |
-| Ekspor (Tahap 5) | `xlsx` untuk Excel, `jspdf` + `jspdf-autotable` untuk PDF |
+| Ekspor (Tahap 5) | `xlsx` untuk Excel, `jspdf` + `jspdf-autotable` untuk PDF (dimuat dinamis) |
 | PWA (Tahap 7) | `vite-plugin-pwa`, service worker, manifest, prompt pembaruan |
-| Backup (Tahap 7) | ekspor JSON berversi + validasi + konfirmasi timpa data |
+| Backup (Tahap 5) | ekspor JSON berversi + checksum SHA-256, validasi, cadangan lokal, konfirmasi timpa data, pemeriksaan konsistensi |
 | Lisensi | HTTPS endpoint `/activate` dan `/verify`, kunci ECDSA P-256 |
 | AI (Tahap 6) | Backend proxy HTTPS + API key penyedia di server |
 | Browser target | Chrome/Edge/Firefox/Safari modern, Android Chrome; butuh WebCrypto (ECDSA P-256) |
@@ -381,7 +391,8 @@ Aturan:
 
 Keterbatasan teknis yang harus diketahui pengguna:
 
-- Data tidak tersinkron antarlaptop dan HP; pemindahan data lewat backup file (Tahap 7).
+- Data tidak tersinkron antarlaptop dan HP; pemindahan data lewat berkas backup (sudah tersedia).
+- Berkas backup tidak dienkripsi; berisi data usaha dan harus disimpan di tempat aman.
 - Menghapus data browser menghapus data usaha.
 - Data lokal belum dienkripsi; jangan menyatakan sebaliknya.
 - Aktivasi dan AI memerlukan internet; pencatatan tidak.
@@ -396,9 +407,9 @@ Keterbatasan teknis yang harus diketahui pengguna:
 | 2 | Produk & persediaan: kategori, satuan, CRUD produk, riwayat harga, kartu stok, peringatan stok | **Selesai** |
 | 3 | Kalkulator HPP: komponen biaya per jenis usaha, HPP per unit, riwayat, simulasi harga/margin | **Selesai** |
 | 4 | Transaksi: penjualan + pembatalan aman, pengeluaran, integrasi stok dan kas, pelanggan/pemasok | **Selesai (kecuali pelanggan/pemasok)** |
-| 5 | Keuangan & laporan: akun kas, transfer, dashboard lengkap, 9 laporan, ekspor Excel/PDF | Belum |
+| 5 | Keuangan & laporan: akun kas, transfer, dashboard lengkap, 9 laporan, ekspor Excel/PDF; backup/restore + pemeriksaan konsistensi | **Selesai** |
 | 6 | SMART ADVISOR: chat, ringkasan kontekstual, adapter AI, proxy, simulasi, riwayat, privasi | Belum |
-| 7 | Backup & PWA: ekspor/impor tervalidasi, pemulihan, manifest, offline, pembaruan | Belum |
+| 7 | Backup & PWA: ekspor/impor tervalidasi, pemulihan, manifest, offline, pembaruan | Sebagian (backup/restore & pemeriksaan selesai; PWA belum) |
 | 8 | Lisensi & finalisasi: server aktivasi, pengelolaan perangkat, toleransi offline, pengujian menyeluruh, dokumentasi | Sebagian (sisi klien sudah ada) |
 
 Ketergantungan: Tahap 3 membutuhkan produk (Tahap 2); Tahap 4 membutuhkan produk, stok,

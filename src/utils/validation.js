@@ -170,6 +170,32 @@ export const expenseCategorySchema = z.object({
     .max(60, 'Nama kategori maksimal 60 karakter'),
 })
 
+export const cashAccountSchema = z.object({
+  name: z
+    .string({ required_error: 'Nama akun wajib diisi' })
+    .trim()
+    .min(2, 'Nama akun minimal 2 karakter')
+    .max(60, 'Nama akun maksimal 60 karakter'),
+  type: z.enum(['tunai', 'bank', 'ewallet'], {
+    errorMap: () => ({ message: 'Pilih jenis akun kas' }),
+  }),
+  openingBalance: moneyField,
+  note: z.string().trim().max(200, 'Catatan maksimal 200 karakter').optional().default(''),
+})
+
+export const cashTransferSchema = z
+  .object({
+    date: z.string().regex(DATE_KEY_PATTERN, 'Tanggal transfer tidak valid'),
+    fromAccountId: z.string().min(1, 'Pilih akun sumber'),
+    toAccountId: z.string().min(1, 'Pilih akun tujuan'),
+    amount: moneyField.refine((value) => value > 0, { message: 'Nominal harus lebih dari 0' }),
+    note: z.string().trim().max(200, 'Catatan maksimal 200 karakter').optional().default(''),
+  })
+  .refine((value) => value.fromAccountId !== value.toAccountId, {
+    message: 'Akun sumber dan tujuan harus berbeda',
+    path: ['toAccountId'],
+  })
+
 export const stockMovementSchema = z.object({
   productId: z.string().min(1, 'Pilih produk'),
   type: z.enum(['masuk', 'keluar', 'penyesuaian']),

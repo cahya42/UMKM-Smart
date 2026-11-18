@@ -87,7 +87,7 @@ export default function SettingsPage() {
     <>
       <PageHeader
         title="Pengaturan"
-        description="Status lisensi, informasi aplikasi, dan catatan perubahan penting. Pengaturan penyedia AI dan backup data ditambahkan pada tahap berikutnya."
+        description="Status lisensi, informasi aplikasi, dan catatan perubahan penting. Backup, pemulihan, dan pemeriksaan konsistensi data tersedia di menu Backup & Data."
       />
 
       <div className="stack">
@@ -223,9 +223,12 @@ export default function SettingsPage() {
                 <strong>Data hanya ada di browser perangkat ini.</strong>
                 <p>
                   Menghapus data browser, memakai mode privat, atau berpindah perangkat membuat data tidak
-                  terbaca. Backup dan pemulihan belum tersedia pada Tahap 1; fitur tersebut dibangun pada
-                  Tahap 7. Jangan gunakan untuk data usaha nyata sebelum backup tersedia.
+                  terbaca. Unduh cadangan secara berkala dan simpan di tempat aman.
                 </p>
+                <Link to="/backup" className="btn btn--secondary" style={{ marginTop: 10 }}>
+                  <Database size={16} aria-hidden="true" />
+                  Buka Backup & Data
+                </Link>
               </div>
             </div>
           </CardBody>

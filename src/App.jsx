@@ -8,7 +8,10 @@ import HppPage from './pages/hpp/HppPage'
 import SalesPage from './pages/sales/SalesPage'
 import SaleForm from './pages/sales/SaleForm'
 import ExpensesPage from './pages/expenses/ExpensesPage'
+import CashPage from './pages/cash/CashPage'
+import ReportsPage from './pages/reports/ReportsPage'
 import SettingsPage from './pages/settings/SettingsPage'
+import BackupPage from './pages/backup/BackupPage'
 import ActivationPage from './pages/activation/ActivationPage'
 import ComingSoonPage from './pages/ComingSoonPage'
 import { LicenseProvider, useLicense } from './services/license/LicenseContext'
@@ -35,6 +38,7 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="profil" element={<ProfilePage />} />
             <Route path="pengaturan" element={<SettingsPage />} />
+            <Route path="backup" element={<BackupPage />} />
 
             <Route path="produk" element={<ProductsPage />} />
             <Route path="persediaan" element={<InventoryPage />} />
@@ -42,18 +46,10 @@ export default function App() {
             <Route path="penjualan" element={<SalesPage />} />
             <Route path="penjualan/baru" element={<SaleForm />} />
             <Route path="pengeluaran" element={<ExpensesPage />} />
+            <Route path="kas" element={<CashPage />} />
+            <Route path="laporan" element={<ReportsPage />} />
 
             {/* Modul tahap berikutnya: navigasi dan tabel sudah siap, fitur menyusul. */}
-            <Route
-              path="kas"
-              element={
-                <ComingSoonPage
-                  title="Kas & Rekening"
-                  stage={5}
-                  description="Kelola akun tunai, rekening bank, dan e-wallet, termasuk transfer antarakun dan riwayat mutasi."
-                />
-              }
-            />
             <Route
               path="pelanggan"
               element={
@@ -71,16 +67,6 @@ export default function App() {
                   title="Pemasok"
                   stage={4}
                   description="Simpan kontak pemasok beserta jenis barang atau jasa yang dipasok."
-                />
-              }
-            />
-            <Route
-              path="laporan"
-              element={
-                <ComingSoonPage
-                  title="Laporan Usaha"
-                  stage={5}
-                  description="Laporan penjualan, pengeluaran, laba rugi sederhana, arus kas, persediaan, HPP, dan produk terlaris dengan ekspor Excel/PDF."
                 />
               }
             />

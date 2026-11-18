@@ -278,3 +278,57 @@
     width: 100%;
   }
 }
+
+/* Menu laporan Tahap 5 */
+.report-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.report-menu__item {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.report-menu__item:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-muted);
+}
+
+.report-menu__item--active {
+  border-color: var(--green-600);
+  background: var(--green-50);
+}
+
+.report-menu__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 8px;
+  background: var(--green-100);
+  color: var(--green-800);
+}
+
+.report-menu__item strong {
+  display: block;
+  font-size: 13.5px;
+}
+
+.report-menu__item small {
+  display: block;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  line-height: 1.35;
+}

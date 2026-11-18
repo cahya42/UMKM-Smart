@@ -1,6 +1,7 @@
 import {
   BarChart3,
   Boxes,
+  DatabaseBackup,
   Calculator,
   CreditCard,
   LayoutDashboard,
@@ -37,7 +38,7 @@ export const NAV_GROUPS = [
       { to: '/hpp', label: 'Kalkulator HPP', icon: Calculator },
       { to: '/penjualan', label: 'Penjualan', icon: Receipt },
       { to: '/pengeluaran', label: 'Pengeluaran', icon: Wallet },
-      { to: '/kas', label: 'Kas & Rekening', icon: CreditCard, stage: 5 },
+      { to: '/kas', label: 'Kas & Rekening', icon: CreditCard },
     ],
   },
   {
@@ -50,13 +51,16 @@ export const NAV_GROUPS = [
   {
     label: 'Analisis',
     items: [
-      { to: '/laporan', label: 'Laporan Usaha', icon: BarChart3, stage: 5 },
+      { to: '/laporan', label: 'Laporan Usaha', icon: BarChart3 },
       { to: '/advisor', label: 'SMART ADVISOR', icon: Sparkles, stage: 6 },
     ],
   },
   {
     label: 'Sistem',
-    items: [{ to: '/pengaturan', label: 'Pengaturan', icon: Settings2 }],
+    items: [
+      { to: '/pengaturan', label: 'Pengaturan', icon: Settings2 },
+      { to: '/backup', label: 'Backup & Data', icon: DatabaseBackup },
+    ],
   },
 ]
 
